@@ -1,0 +1,15 @@
+Appointment Reminder
+
+Hi {{recipientName}},
+
+This is a reminder for your upcoming appointment.
+Doctor: {{doctorName}}
+Date: {{appointmentDate}}
+Time: {{appointmentTime}}
+
+{{#if message}}
+Note: {{message}}
+{{/if}}
+
+Regards,
+{{appName}}

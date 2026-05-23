@@ -1,0 +1,1 @@
+Your appointment with {{doctorName}} at {{hospitalName}} is confirmed for {{appointmentDate}} at {{appointmentTime}}.

@@ -1,0 +1,15 @@
+Appointment Confirmed
+
+Hi {{recipientName}},
+
+Your appointment has been confirmed.
+Doctor: {{doctorName}}
+Date: {{appointmentDate}}
+Time: {{appointmentTime}}
+
+{{#if message}}
+Note: {{message}}
+{{/if}}
+
+Thank you,
+{{appName}}

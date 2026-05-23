@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{title}}</title>
+  </head>
+  <body style="margin:0;padding:0;background:#f8f4f4;font-family:'Segoe UI',Arial,sans-serif;color:#0f172a;">
+    <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="background:#f8f4f4;padding:32px 12px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="max-width:620px;">
+            <tr>
+              <td style="padding:0 0 14px 0;text-align:center;">
+                <span style="display:inline-block;padding:7px 14px;border-radius:999px;background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">
+                  Schedule update
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td style="background:#b91c1c;padding:28px 32px 24px 32px;border-radius:24px 24px 0 0;">
+                <p style="margin:0 0 10px 0;font-size:13px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:#fecaca;">
+                  {{appName}}
+                </p>
+                <h1 style="margin:0;font-size:28px;line-height:1.25;color:#ffffff;">
+                  {{#if title}}{{title}}{{else}}Your appointment has been cancelled{{/if}}
+                </h1>
+                <p style="margin:12px 0 0 0;font-size:15px;line-height:1.7;color:#fee2e2;">
+                  We wanted to notify you right away so you can plan your next step.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="background:#ffffff;padding:32px;border:1px solid #ead7d7;border-top:none;border-radius:0 0 24px 24px;box-shadow:0 18px 42px rgba(15,23,42,0.08);">
+                <p style="margin:0 0 14px 0;font-size:15px;line-height:1.7;color:#334155;">Hi {{recipientName}},</p>
+                <p style="margin:0 0 24px 0;font-size:15px;line-height:1.7;color:#475569;">
+                  Your appointment has been cancelled.
+                </p>
+                <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="margin:0 0 24px 0;border:1px solid #fee2e2;border-radius:18px;background:#fff7f7;">
+                  <tr>
+                    <td style="padding:18px 20px;border-bottom:1px solid #fee2e2;font-size:13px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#b91c1c;">
+                      Cancelled appointment details
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:20px;">
+                      <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
+                        <tr>
+                          <td style="padding:0 0 10px 0;font-size:13px;font-weight:700;color:#b91c1c;width:110px;vertical-align:top;">Doctor</td>
+                          <td style="padding:0 0 10px 0;font-size:14px;line-height:1.6;color:#0f172a;">{{doctorName}}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding:0 0 10px 0;font-size:13px;font-weight:700;color:#b91c1c;width:110px;vertical-align:top;">Date</td>
+                          <td style="padding:0 0 10px 0;font-size:14px;line-height:1.6;color:#0f172a;">{{appointmentDate}}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding:0;font-size:13px;font-weight:700;color:#b91c1c;width:110px;vertical-align:top;">Time</td>
+                          <td style="padding:0;font-size:14px;line-height:1.6;color:#0f172a;">{{appointmentTime}}</td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+                {{#if cancellationReason}}
+                  <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="margin:0 0 24px 0;">
+                    <tr>
+                      <td style="padding:18px 20px;border-radius:18px;background:#fef2f2;border:1px solid #fecaca;">
+                        <p style="margin:0 0 8px 0;font-size:13px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:#b91c1c;">
+                          Cancellation reason
+                        </p>
+                        <p style="margin:0;font-size:14px;line-height:1.7;color:#475569;">{{cancellationReason}}</p>
+                      </td>
+                    </tr>
+                  </table>
+                {{/if}}
+                <p style="margin:0;font-size:13px;line-height:1.7;color:#64748b;">
+                  You can book another appointment whenever you are ready.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

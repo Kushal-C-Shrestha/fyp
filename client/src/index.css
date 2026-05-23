@@ -1,0 +1,235 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=Sora:wght@500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg: #f2faf5;
+    --surface: #ffffff;
+    --surface-soft: #f4fbf7;
+    --ink: #0f172a;
+    --ink-soft: #475569;
+    --line: #d7e8de;
+    --brand: #0f766e;
+    --brand-strong: #0b5d55;
+    --brand-soft: #d1fae5;
+  }
+
+  html, body, #root {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background:
+      radial-gradient(circle at 4% 6%, rgba(16, 185, 129, 0.14), transparent 40%),
+      radial-gradient(circle at 96% 2%, rgba(13, 148, 136, 0.12), transparent 36%),
+      var(--bg);
+    @apply text-slate-800 antialiased min-h-screen;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Sora', sans-serif;
+  }
+
+  input, select, textarea, button {
+    font-family: inherit;
+  }
+}
+
+@layer components {
+  .page-shell {
+    @apply max-w-[1240px] mx-auto px-4 sm:px-6;
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.86);
+    border: 1px solid var(--line);
+    @apply rounded-2xl shadow-[0_10px_35px_-20px_rgba(16,185,129,0.45)] backdrop-blur-md;
+  }
+
+  .input-soft {
+    @apply w-full rounded-xl border border-slate-200 bg-white/90 px-3 py-2.5 text-sm text-slate-700 outline-none transition;
+  }
+
+  .input-soft:focus {
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl bg-emerald-700 px-5 py-2.5 text-sm font-bold text-white transition;
+  }
+
+  .btn-primary:hover {
+    background-color: var(--brand-strong);
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 transition;
+  }
+
+  .btn-ghost:hover {
+    @apply border-emerald-200 bg-emerald-50 text-emerald-700;
+  }
+
+  .editor-shell .ql-toolbar.ql-snow {
+    @apply rounded-t-[22px] border-slate-200 bg-white px-3 py-2;
+  }
+
+  .editor-shell .ql-container.ql-snow {
+    @apply min-h-[340px] rounded-b-[22px] border-slate-200 bg-white text-base;
+  }
+
+  .editor-shell .ql-editor {
+    @apply min-h-[340px] px-5 py-4 text-slate-800;
+  }
+
+  /* ── Blog editor (Medium-like) ─────────────────────────────────── */
+  .blog-editor .ql-toolbar.ql-snow {
+    position: sticky;
+    top: 57px; /* height of the top action bar */
+    z-index: 20;
+    border: none;
+    border-bottom: 1px solid #e2e8f0;
+    background: #ffffff;
+    padding: 8px 0;
+  }
+
+  .blog-editor .ql-container.ql-snow {
+    border: none;
+    font-size: 1.125rem;
+    line-height: 1.85;
+  }
+
+  .blog-editor .ql-editor {
+    min-height: 480px;
+    padding: 24px 0 80px;
+    color: #1e293b;
+    font-size: 1.125rem;
+    line-height: 1.85;
+    overflow-y: visible; /* prevent Quill internal scroll from hijacking window scroll */
+  }
+
+  .blog-editor .ql-editor.ql-blank::before {
+    color: #94a3b8;
+    font-style: normal;
+    font-size: 1.125rem;
+    left: 0;
+  }
+
+  .blog-editor .ql-editor h1 { font-size: 2rem; font-weight: 700; margin-top: 1.75rem; }
+  .blog-editor .ql-editor h2 { font-size: 1.6rem; font-weight: 700; margin-top: 1.5rem; }
+  .blog-editor .ql-editor h3 { font-size: 1.3rem; font-weight: 600; margin-top: 1.25rem; }
+  .blog-editor .ql-editor blockquote {
+    border-left: 4px solid #10b981;
+    background: #f0fdf4;
+    padding: 12px 20px;
+    margin: 16px 0;
+    border-radius: 0 12px 12px 0;
+    color: #334155;
+  }
+  .blog-editor .ql-editor img {
+    border-radius: 12px;
+    max-width: 100%;
+    margin: 16px 0;
+  }
+
+  /* ── Blog reading prose ───────────────────────────────────────── */
+  .blog-prose {
+    max-width: none;
+    font-size: 1.125rem;   /* 18 px — comfortable reading size */
+    line-height: 1.9;
+    color: #1e293b;        /* slate-800 */
+  }
+
+  .blog-prose h1,
+  .blog-prose h2,
+  .blog-prose h3,
+  .blog-prose h4 {
+    font-family: 'Sora', sans-serif;
+    color: #0f172a;
+    margin-top: 2.5rem;
+    margin-bottom: 0.5rem;
+    line-height: 1.25;
+  }
+
+  .blog-prose h1 { font-size: 2rem;   font-weight: 800; }
+  .blog-prose h2 { font-size: 1.65rem; font-weight: 700; }
+  .blog-prose h3 { font-size: 1.35rem; font-weight: 700; }
+  .blog-prose h4 { font-size: 1.15rem; font-weight: 600; }
+
+  .blog-prose p { margin-top: 1.4rem; }
+  .blog-prose p:first-child { margin-top: 0; }
+
+  .blog-prose ul,
+  .blog-prose ol {
+    margin-top: 1.25rem;
+    padding-left: 1.75rem;
+  }
+
+  .blog-prose ul { list-style: disc; }
+  .blog-prose ol { list-style: decimal; }
+
+  .blog-prose li { margin-top: 0.4rem; }
+
+  .blog-prose a {
+    color: #0f766e;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .blog-prose a:hover { color: #0b5d55; }
+
+  .blog-prose strong { font-weight: 700; color: #0f172a; }
+
+  .blog-prose blockquote {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    border-left: 4px solid #10b981;
+    background: #f0fdf4;
+    padding: 1rem 1.5rem;
+    border-radius: 0 12px 12px 0;
+    color: #1e293b;
+    font-style: italic;
+  }
+
+  .blog-prose img {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 100%;
+    border: 1px solid #e2e8f0;
+  }
+
+  .blog-prose pre {
+    margin-top: 1.75rem;
+    overflow-x: auto;
+    border-radius: 12px;
+    background: #0f172a;
+    padding: 1.25rem 1.5rem;
+    font-size: 0.875rem;
+    line-height: 1.7;
+    color: #e2e8f0;
+  }
+
+  .blog-prose code {
+    font-size: 0.9em;
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #0f766e;
+  }
+
+  .blog-prose pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+  }
+}

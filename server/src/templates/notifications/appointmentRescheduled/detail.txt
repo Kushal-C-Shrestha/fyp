@@ -1,0 +1,1 @@
+The appointment for {{patientName}} with {{doctorName}} at {{hospitalName}} has been moved to {{appointmentDate}} at {{appointmentTime}}.

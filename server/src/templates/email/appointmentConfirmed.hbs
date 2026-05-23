@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{title}}</title>
+  </head>
+  <body style="margin:0;padding:0;background:#f1f7f6;font-family:'Segoe UI',Arial,sans-serif;color:#0f172a;">
+    <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="background:#f1f7f6;padding:32px 12px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="max-width:620px;">
+            <tr>
+              <td style="padding:0 0 14px 0;text-align:center;">
+                <span style="display:inline-block;padding:7px 14px;border-radius:999px;background:#dcfce7;color:#15803d;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">
+                  Appointment confirmed
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td style="background:#15803d;padding:28px 32px 24px 32px;border-radius:24px 24px 0 0;">
+                <p style="margin:0 0 10px 0;font-size:13px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:#bbf7d0;">
+                  {{appName}}
+                </p>
+                <h1 style="margin:0;font-size:28px;line-height:1.25;color:#ffffff;">
+                  {{#if title}}{{title}}{{else}}Your appointment is confirmed{{/if}}
+                </h1>
+                <p style="margin:12px 0 0 0;font-size:15px;line-height:1.7;color:#ecfdf5;">
+                  Your booking has been secured. Here are the details for your visit.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="background:#ffffff;padding:32px;border:1px solid #d9e6e3;border-top:none;border-radius:0 0 24px 24px;box-shadow:0 18px 42px rgba(15,23,42,0.08);">
+                <p style="margin:0 0 14px 0;font-size:15px;line-height:1.7;color:#334155;">Hi {{recipientName}},</p>
+                <p style="margin:0 0 24px 0;font-size:15px;line-height:1.7;color:#475569;">
+                  Your appointment has been confirmed successfully.
+                </p>
+                <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="margin:0 0 24px 0;border:1px solid #dcfce7;border-radius:18px;background:#f7fef9;">
+                  <tr>
+                    <td style="padding:18px 20px;border-bottom:1px solid #dcfce7;font-size:13px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#15803d;">
+                      Appointment details
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:20px;">
+                      <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
+                        <tr>
+                          <td style="padding:0 0 10px 0;font-size:13px;font-weight:700;color:#15803d;width:110px;vertical-align:top;">Doctor</td>
+                          <td style="padding:0 0 10px 0;font-size:14px;line-height:1.6;color:#0f172a;">{{doctorName}}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding:0 0 10px 0;font-size:13px;font-weight:700;color:#15803d;width:110px;vertical-align:top;">Date</td>
+                          <td style="padding:0 0 10px 0;font-size:14px;line-height:1.6;color:#0f172a;">{{appointmentDate}}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding:0;font-size:13px;font-weight:700;color:#15803d;width:110px;vertical-align:top;">Time</td>
+                          <td style="padding:0;font-size:14px;line-height:1.6;color:#0f172a;">{{appointmentTime}}</td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+                {{#if message}}
+                  <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="margin:0 0 24px 0;">
+                    <tr>
+                      <td style="padding:18px 20px;border-radius:18px;background:#f8fafc;border:1px solid #e2e8f0;">
+                        <p style="margin:0;font-size:14px;line-height:1.7;color:#475569;">{{message}}</p>
+                      </td>
+                    </tr>
+                  </table>
+                {{/if}}
+                <p style="margin:0;font-size:13px;line-height:1.7;color:#64748b;">
+                  Please arrive a few minutes early so check-in stays smooth and on time.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

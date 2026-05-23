@@ -1,0 +1,1 @@
+Your blog "{{blogTitle}}" was approved and is now published.

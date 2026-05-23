@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{title}}</title>
+  </head>
+  <body style="margin:0;padding:0;background:#f9fafb;font-family:Arial,'Helvetica Neue',sans-serif;color:#111827;">
+    <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="background:#f9fafb;padding:48px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="max-width:560px;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:48px 44px;">
+            <tr>
+              <td style="padding:0 0 28px 0;">
+                <p style="margin:0;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9ca3af;">
+                  {{appName}}
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:0 0 36px 0;">
+                <div style="height:1px;background:#f3f4f6;"></div>
+              </td>
+            </tr>
+
+            {{#if purpose}}
+            <tr>
+              <td style="padding:0 0 6px 0;">
+                <p style="margin:0;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#9ca3af;">
+                  {{purpose}}
+                </p>
+              </td>
+            </tr>
+            {{/if}}
+
+            <tr>
+              <td style="padding:0 0 24px 0;">
+                <h1 style="margin:0;font-size:28px;line-height:1.15;font-weight:600;color:#111827;">
+                  {{title}}
+                </h1>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:0 0 40px 0;">
+                <p style="margin:0 0 6px 0;font-size:15px;line-height:1.7;color:#111827;">Hi {{recipientName}},</p>
+                <p style="margin:0;font-size:15px;line-height:1.7;color:#6b7280;">
+                  {{message}}
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:0 0 12px 0;">
+                <p style="margin:0;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9ca3af;">
+                  Verification code
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:0 0 10px 0;">
+                <p style="margin:0;font-size:44px;line-height:1;font-weight:600;letter-spacing:16px;color:#111827;font-family:'Courier New',Courier,monospace;user-select:all;cursor:text;">
+                  {{otpCode}}
+                </p>
+              </td>
+            </tr>
+
+            {{#if expiresIn}}
+            <tr>
+              <td style="padding:0 0 40px 0;">
+                <p style="margin:0;font-size:13px;color:#9ca3af;">
+                  Expires in <span style="color:#6b7280;font-weight:600;">{{expiresIn}} minutes</span>
+                </p>
+              </td>
+            </tr>
+            {{else}}
+            <tr><td style="padding:0 0 40px 0;"></td></tr>
+            {{/if}}
+
+            <tr>
+              <td style="padding:0 0 28px 0;">
+                <div style="height:1px;background:#f3f4f6;"></div>
+              </td>
+            </tr>
+
+            <tr>
+              <td>
+                <p style="margin:0 0 8px 0;font-size:13px;line-height:1.7;color:#6b7280;">
+                  Never share this code with anyone, including {{appName}} support.
+                </p>
+                <p style="margin:0;font-size:13px;line-height:1.7;color:#9ca3af;">
+                  Your account remains secure if you didn't make this request.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

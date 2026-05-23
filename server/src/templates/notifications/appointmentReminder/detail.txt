@@ -1,0 +1,1 @@
+You have an upcoming appointment with {{doctorName}} at {{hospitalName}} on {{appointmentDate}} at {{appointmentTime}}.
