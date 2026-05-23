@@ -27,19 +27,17 @@ const DoctorReviews = () => {
       try {
         setLoading(true);
 
-        const doctorRes = await api.get("/doctors");
-        const doctorList = Array.isArray(doctorRes?.data?.doctors) ? doctorRes.data.doctors : [];
-        const selfDoctor = doctorList.find((item) => Number(item.user_id) === Number(user?.id));
+        const selfDoctorId = Number(user?.id);
 
-        if (!selfDoctor?.user_id) {
+        if (!Number.isInteger(selfDoctorId) || selfDoctorId <= 0) {
           setDoctorId(null);
           setReviews([]);
           return;
         }
 
-        setDoctorId(selfDoctor.user_id);
+        setDoctorId(selfDoctorId);
 
-        const reviewsRes = await api.get(`/doctors/${selfDoctor.user_id}/reviews`);
+        const reviewsRes = await api.get(`/doctors/${selfDoctorId}/reviews`);
         setReviews(Array.isArray(reviewsRes?.data?.reviews) ? reviewsRes.data.reviews : []);
       } catch {
         setDoctorId(null);

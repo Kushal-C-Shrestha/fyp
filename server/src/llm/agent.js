@@ -218,6 +218,16 @@ const symptomMessageNeedsMapping = (message = "") =>
 const specialtyArticle = (specialty = "") =>
     /^[aeiou]/i.test(String(specialty).trim()) ? "an" : "a";
 
+const isGreetingMessage = (message = "") =>
+    /^(hi|hello|hey|namaste|good morning|good afternoon|good evening|yo|sup)[!.?\s]*$/i.test(
+        String(message || "").trim()
+    );
+
+const isThanksMessage = (message = "") =>
+    /^(thanks|thank you|thank u|thx|okay thanks|ok thanks)[!.?\s]*$/i.test(
+        String(message || "").trim()
+    );
+
 const isDoctorRegistrationQuestion = (message = "") =>
     /\b(register|registration|sign up|signup|apply|join|become)\b/i.test(message)
     && /\b(doctor|dr|physician)\b/i.test(message);
@@ -307,6 +317,20 @@ After submission, an admin reviews the request. If approved, the hospital can be
 const tryDeterministicToolResponse = async (sessionId, userMessage) => {
     const searchDoctors = getTool("search_doctors");
     if (!searchDoctors) return null;
+
+    if (isGreetingMessage(userMessage)) {
+        return {
+            message: "Hello, welcome to e-Swasthya! I can help you find doctors, check availability, book appointments, or explain platform registration.",
+            metadata: {},
+        };
+    }
+
+    if (isThanksMessage(userMessage)) {
+        return {
+            message: "You're welcome. I’m here if you need help with doctors, hospitals, or appointments.",
+            metadata: {},
+        };
+    }
 
     if (isAvailabilityQuestion(userMessage)) {
         const mentionedDoctor = findRememberedDoctorMention(sessionId, userMessage);
@@ -406,10 +430,10 @@ const postProcessAgentOutput = (output, stepsText = "") => {
 };
 
 export const runAgent = async (sessionId, userMessage, context = "N/A", onProgress = null) => {
-    const deterministicResult = await tryDeterministicToolResponse(sessionId, userMessage);
-    if (deterministicResult) {
-        return deterministicResult;
-    }
+    // const deterministicResult = await tryDeterministicToolResponse(sessionId, userMessage);
+    // if (deterministicResult) {
+    //     return deterministicResult;
+    // }
 
     if (!unifiedAgentExecutor) {
         unifiedAgentExecutor = await buildAgent();

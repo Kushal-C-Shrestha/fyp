@@ -32,16 +32,16 @@ export const cache = (ttlSeconds = 300, ns = "route") => async (req, res, next) 
 export const bustCache = async (ns) => {
     if (!isReady()) return;
     try {
-        let cursor = 0;
+        let cursor = "0";
         const pattern = `cache:${ns}:*`;
         do {
             const { cursor: next, keys } = await redisClient.scan(cursor, {
                 MATCH: pattern,
                 COUNT: 100,
             });
-            cursor = next;
+            cursor = String(next);
             if (keys.length > 0) await redisClient.del(keys);
-        } while (cursor !== 0);
+        } while (cursor !== "0");
     } catch (err) {
         console.warn("[Cache] bustCache error:", err.message);
     }

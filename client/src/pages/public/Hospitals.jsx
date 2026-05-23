@@ -211,7 +211,7 @@ const Hospitals = () => {
                 {loading ? (
                   <p className="text-sm text-slate-500">Loading hospitals...</p>
                 ) : currentHospitals.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+                  <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
                     {currentHospitals.map((hospital) => (
                       <article 
                         key={hospital.hospital_id} 

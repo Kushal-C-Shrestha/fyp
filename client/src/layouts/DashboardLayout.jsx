@@ -6,6 +6,7 @@ import { useAuth } from "../hooks/useAuth";
 
 const DashboardNavItem = ({ item, rootPath }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -30,7 +31,10 @@ const DashboardNavItem = ({ item, rootPath }) => {
       >
         <button
           type="button"
-          onClick={() => setIsOpen((value) => !value)}
+          onClick={() => {
+            setIsOpen((value) => !value);
+            navigate(item.to);
+          }}
           className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition ${
             isMainActive
               ? "bg-emerald-50 text-emerald-700"

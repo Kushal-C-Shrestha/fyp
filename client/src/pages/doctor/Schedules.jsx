@@ -282,11 +282,9 @@ const DoctorSchedules = ({ view = "all" }) => {
         setScheduleError("");
         setScheduleSuccess("");
 
-        const doctorRes = await api.get("/doctors");
-        const doctorList = Array.isArray(doctorRes?.data?.doctors) ? doctorRes.data.doctors : [];
-        const selfDoctor = doctorList.find((item) => Number(item.user_id) === Number(user?.id));
+        const selfDoctorId = Number(user?.id);
 
-        if (!selfDoctor?.user_id) {
+        if (!Number.isInteger(selfDoctorId) || selfDoctorId <= 0) {
           setDoctorId(null);
           setSlots([]);
           setRecurringSchedule([]);
@@ -296,8 +294,8 @@ const DoctorSchedules = ({ view = "all" }) => {
           return;
         }
 
-        setDoctorId(Number(selfDoctor.user_id));
-        const availabilityRes = await api.get(`/doctors/${selfDoctor.user_id}/availability`);
+        setDoctorId(selfDoctorId);
+        const availabilityRes = await api.get(`/doctors/${selfDoctorId}/availability`);
 
         const loadedSlots = Array.isArray(availabilityRes?.data?.slots) ? availabilityRes.data.slots : [];
         const loadedSchedule = Array.isArray(availabilityRes?.data?.recurringSchedule)
@@ -321,7 +319,7 @@ const DoctorSchedules = ({ view = "all" }) => {
           loadedHospitals = [];
         }
         try {
-          const assignmentRequestsRes = await api.get(`/doctors/${selfDoctor.user_id}/assignment-requests`);
+          const assignmentRequestsRes = await api.get(`/doctors/${selfDoctorId}/assignment-requests`);
           loadedAssignmentRequests = Array.isArray(assignmentRequestsRes?.data?.requests)
             ? assignmentRequestsRes.data.requests
             : [];
@@ -330,7 +328,7 @@ const DoctorSchedules = ({ view = "all" }) => {
         }
         let loadedCurrentAssignments = [];
         try {
-          const assignmentsRes = await api.get(`/doctors/${selfDoctor.user_id}/assignments`);
+          const assignmentsRes = await api.get(`/doctors/${selfDoctorId}/assignments`);
           loadedCurrentAssignments = Array.isArray(assignmentsRes?.data?.assignments)
             ? assignmentsRes.data.assignments
             : [];
@@ -338,7 +336,7 @@ const DoctorSchedules = ({ view = "all" }) => {
           loadedCurrentAssignments = [];
         }
         try {
-          const leaveRequestsRes = await api.get(`/doctors/${selfDoctor.user_id}/leave-requests`);
+          const leaveRequestsRes = await api.get(`/doctors/${selfDoctorId}/leave-requests`);
           loadedLeaveRequests = Array.isArray(leaveRequestsRes?.data?.requests)
             ? leaveRequestsRes.data.requests
             : [];
@@ -411,34 +409,46 @@ const DoctorSchedules = ({ view = "all" }) => {
   }, [recurringSchedule]);
 
   const assignmentOptions = useMemo(() => {
-    if (Array.isArray(assignments) && assignments.length > 0) {
-      return assignments
-        .map((assignment) => ({
-          assignment_id: assignment.assignment_id,
-          hospital_id: assignment.hospital_id ?? null,
-          hospital_name: assignment.hospital_name || "Hospital unavailable",
-          department_name: assignment.department_name || "General",
-          assignment_status: assignment.assignment_status || "Active",
-        }))
-        .filter(
-          (assignment) =>
-            Number.isInteger(Number(assignment.assignment_id)) && Number(assignment.assignment_id) > 0
-        );
-    }
+    const optionMap = new Map();
 
-    return groupedRecurring
-      .map((assignment) => ({
+    const addOption = (assignment = {}) => {
+      const assignmentId = Number(assignment.assignment_id);
+      if (!Number.isInteger(assignmentId) || assignmentId <= 0) return;
+      if (optionMap.has(assignmentId)) {
+        optionMap.set(assignmentId, {
+          ...optionMap.get(assignmentId),
+          ...assignment,
+          assignment_id: assignmentId,
+          hospital_name: assignment.hospital_name || optionMap.get(assignmentId).hospital_name,
+          department_name: assignment.department_name || optionMap.get(assignmentId).department_name,
+        });
+        return;
+      }
+      optionMap.set(assignmentId, {
+        assignment_id: assignmentId,
+        hospital_id: assignment.hospital_id ?? null,
+        hospital_name: assignment.hospital_name || "Hospital unavailable",
+        department_name: assignment.department_name || "General",
+        assignment_status: assignment.assignment_status || "Active",
+      });
+    };
+
+    assignments.forEach(addOption);
+    currentAssignments.forEach(addOption);
+    groupedRecurring.forEach((assignment) =>
+      addOption({
         assignment_id: assignment.assignment_id,
         hospital_id: null,
         hospital_name: assignment.hospital_name,
         department_name: assignment.department_name,
         assignment_status: assignment.assignment_status || "Active",
-      }))
-      .filter(
-        (assignment) =>
-          Number.isInteger(Number(assignment.assignment_id)) && Number(assignment.assignment_id) > 0
-      );
-  }, [assignments, groupedRecurring]);
+      })
+    );
+
+    return Array.from(optionMap.values()).sort((a, b) =>
+      String(a.hospital_name || "").localeCompare(String(b.hospital_name || ""))
+    );
+  }, [assignments, currentAssignments, groupedRecurring]);
 
   const scheduleRowsByAssignment = useMemo(
     () =>

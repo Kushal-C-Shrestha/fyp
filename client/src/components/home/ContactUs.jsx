@@ -58,14 +58,14 @@ const ContactUs = () => {
                 <Phone className="mt-0.5 h-4 w-4 text-emerald-700" />
                 <div>
                   <p className="text-sm font-semibold text-slate-900">Call Us</p>
-                  <p className="text-sm text-slate-600">+977 9801234567</p>
+                  <p className="text-sm text-slate-600">+977 9866486559</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <Mail className="mt-0.5 h-4 w-4 text-emerald-700" />
                 <div>
                   <p className="text-sm font-semibold text-slate-900">Email Us</p>
-                  <p className="text-sm text-slate-600">eswasthya@gmail.com</p>
+                  <p className="text-sm text-slate-600">support@eswasthya.com</p>
                 </div>
               </div>
             </div>

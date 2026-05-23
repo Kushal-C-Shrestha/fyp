@@ -84,23 +84,41 @@ const getAllDoctors = async () => {
                 ORDER BY review_count DESC, u.full_name ASC
         `);
 
-        return rows.map((doc) => ({
-            id: doc.user_id,
-            name: doc.user_name || "Doctor",
-            email: doc.user_email || "",
-            profilePicture: doc.user_profile || "",
-            specialization: doc.specialization_name || "General Medicine",
-            experienceYears: Number(doc.doctor_experience || 0),
-            hospitalId: doc.hospital_id ?? null,
-            hospitalName: doc.hospital_name || "Hospital unavailable",
-            description: doc.doctor_description || "",
-            rating: parseFloat(doc.avg_rating) || 0,
-            reviewCount: parseInt(doc.review_count, 10) || 0,
-            address: doc.address || "",
-            hospitalTimings: Array.isArray(doc.hospital_timings)
-                ? doc.hospital_timings
-                : [],
-        }));
+        return rows.map((doc) => {
+            const mapped = {
+                id: doc.user_id,
+                name: doc.user_name || "Doctor",
+                email: doc.user_email || "",
+                profilePicture: doc.user_profile || "",
+                specialization: doc.specialization_name || "General Medicine",
+                experienceYears: Number(doc.doctor_experience || 0),
+                hospitalId: doc.hospital_id ?? null,
+                hospitalName: doc.hospital_name || "Hospital unavailable",
+                description: doc.doctor_description || "",
+                rating: parseFloat(doc.avg_rating) || 0,
+                reviewCount: parseInt(doc.review_count, 10) || 0,
+                address: doc.address || "",
+                hospitalTimings: Array.isArray(doc.hospital_timings)
+                    ? doc.hospital_timings
+                    : [],
+            };
+
+            return {
+                ...mapped,
+                user_id: mapped.id,
+                user_name: mapped.name,
+                user_email: mapped.email,
+                user_profile: mapped.profilePicture,
+                specialization_name: mapped.specialization,
+                doctor_description: mapped.description,
+                doctor_experience: mapped.experienceYears,
+                hospital_id: mapped.hospitalId,
+                hospital_name: mapped.hospitalName,
+                avg_rating: mapped.rating,
+                review_count: mapped.reviewCount,
+                hospital_timings: mapped.hospitalTimings,
+            };
+        });
     } catch (error) {
         console.error("Error fetching doctors:", error);
         const err = new Error(error.message || "Failed to fetch doctors.");

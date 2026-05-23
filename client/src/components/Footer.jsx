@@ -33,8 +33,8 @@ const Footer = () => {
         <div>
           <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-white">Contact</h3>
           <p className="text-sm text-emerald-100">support@eswasthya.com</p>
-          <p className="text-sm text-emerald-100">+977-9866486559</p>
-          <p className="text-sm text-emerald-100">Kathmandu, Nepal</p>
+          <p className="text-sm text-emerald-100">+977 9866486559</p>
+          <p className="text-sm text-emerald-100">New Baneshwor, Kathmandu, Nepal</p>
         </div>
       </div>
 

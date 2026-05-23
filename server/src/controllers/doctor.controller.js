@@ -1,5 +1,6 @@
 import * as doctorService from "../services/doctor.service.js";
 import * as doctorRequestService from "../services/doctorHospitalRequest.service.js";
+import { bustCache } from "../middlewares/cache.middleware.js";
 
 const getAllDoctors = async (req, res) => {
     try {
@@ -76,22 +77,36 @@ const getAvailableSlotsForDoctor = async (req, res) => {
             return res.status(400).json({ success: false, message: "Invalid doctor ID" });
         }
         const slots = await doctorService.generateAvailableSlots(id, date);
+        const assignmentSnapshot = await doctorRequestService.getDoctorAssignments({ doctorId: id });
         
         // Extract assignments and recurring schedules for frontend compatibility
         const { doctor } = await doctorService.getDoctorById(id);
-        const assignments = [];
+        const assignmentsById = new Map();
         const recurringSchedule = [];
+        assignmentSnapshot.forEach((assignment) => {
+            if (!assignment.assignment_id) return;
+            assignmentsById.set(Number(assignment.assignment_id), {
+                assignment_id: assignment.assignment_id,
+                hospital_id: assignment.hospital_id,
+                hospital_name: assignment.hospital_name,
+                department_name: assignment.department_name || "General",
+                assignment_status: assignment.assignment_status || "Active"
+            });
+        });
         if (doctor && Array.isArray(doctor.hospitals)) {
             doctor.hospitals.forEach(h => {
-                if (Array.isArray(h.schedule) && h.schedule.length > 0) {
-                    assignments.push({
-                        assignment_id: h.schedule[0].assignment_id,
+                const scheduleRows = Array.isArray(h.schedule) ? h.schedule : [];
+                const assignmentId = scheduleRows[0]?.assignment_id || h.assignment_id;
+                if (assignmentId) {
+                    assignmentsById.set(Number(assignmentId), {
+                        ...(assignmentsById.get(Number(assignmentId)) || {}),
+                        assignment_id: assignmentId,
                         hospital_id: h.hospital_id,
                         hospital_name: h.hospital_name,
                         department_name: "General",
                         assignment_status: "Active"
                     });
-                    h.schedule.forEach(s => {
+                    scheduleRows.forEach(s => {
                         recurringSchedule.push({
                             assignment_id: s.assignment_id,
                             hospital_name: h.hospital_name,
@@ -107,6 +122,7 @@ const getAvailableSlotsForDoctor = async (req, res) => {
             });
         }
         
+        const assignments = Array.from(assignmentsById.values());
         return res.status(200).json({ success: true, slots, assignments, recurringSchedule });
     } catch (error) {
         return res.status(error.status || 500).json({ success: false, message: error.message });
@@ -244,6 +260,9 @@ const verifyDoctorRequest = async (req, res) => {
         const { status } = req.body;
         const user = req.user;
         const result = await doctorService.verifyDoctorRequest(requestId, status, user);
+        if (String(status || "").trim().toLowerCase() === "approved") {
+            await Promise.all([bustCache("doctors"), bustCache("hospitals")]);
+        }
         return res.status(200).json({ success: true, message: result.message });
     } catch (error) {
         return res.status(error.status || 500).json({ success: false, message: error.message });

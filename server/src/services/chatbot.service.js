@@ -27,6 +27,38 @@ const getCleanErrorMessage = (err) => {
     return message;
 };
 
+const getHeaderValue = (headers, key) => {
+    if (!headers) return "";
+    if (typeof headers.get === "function") return headers.get(key) || "";
+    return headers[key] || headers[key.toLowerCase()] || "";
+};
+
+const logLlmRateLimit = (err) => {
+    const is429 =
+        err?.status === 429 ||
+        err?.message?.includes("429") ||
+        err?.constructor?.name === "RateLimitError";
+
+    if (!is429) return;
+
+    const detail = err?.error?.error || err?.error || {};
+    console.warn("[LLM_RATE_LIMIT]", {
+        provider: process.env.LLM_PROVIDER || "auto",
+        model: process.env.GROQ_LLM_MODEL || process.env.GOOGLE_LLM_MODEL || process.env.OLLAMA_MODEL || "unknown",
+        status: err?.status || 429,
+        type: detail?.type || "",
+        code: detail?.code || "",
+        retryAfter: getHeaderValue(err?.headers, "retry-after"),
+        limitRequests: getHeaderValue(err?.headers, "x-ratelimit-limit-requests"),
+        remainingRequests: getHeaderValue(err?.headers, "x-ratelimit-remaining-requests"),
+        resetRequests: getHeaderValue(err?.headers, "x-ratelimit-reset-requests"),
+        limitTokens: getHeaderValue(err?.headers, "x-ratelimit-limit-tokens"),
+        remainingTokens: getHeaderValue(err?.headers, "x-ratelimit-remaining-tokens"),
+        resetTokens: getHeaderValue(err?.headers, "x-ratelimit-reset-tokens"),
+        message: detail?.message || getCleanErrorMessage(err),
+    });
+};
+
 export const handleMessage = async (sessionId, userId, message) => {
     if (!message || message.length === 0) {
         const error = new Error("Message is required.");
@@ -172,6 +204,7 @@ export const handleMessage = async (sessionId, userId, message) => {
             assistantMetadata = typeof agentResult === "string" ? {} : (agentResult.metadata || {});
             mergeEntityMemory(sessionId, assistantMetadata);
         } catch (agentErr) {
+            logLlmRateLimit(agentErr);
 
 
             const is429 =
@@ -233,6 +266,8 @@ export const handleMessage = async (sessionId, userId, message) => {
         return { sessionId, message: assistantText };
 
     } catch (error) {
+        logLlmRateLimit(error);
+
         const is429 =
             error?.status === 429 ||
             error?.message?.includes("429") ||

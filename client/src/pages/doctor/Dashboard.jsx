@@ -214,16 +214,14 @@ const Dashboard = () => {
       try {
         setLoading(true);
 
-        const [appointmentsRes, doctorsRes] = await Promise.all([api.get("/appointments"), api.get("/doctors")]);
+        const appointmentsRes = await api.get("/appointments");
 
         const appointmentList = Array.isArray(appointmentsRes?.data?.appointments) ? appointmentsRes.data.appointments : [];
         setAppointments(appointmentList);
 
-        const doctorList = Array.isArray(doctorsRes?.data?.doctors) ? doctorsRes.data.doctors : [];
-        const selfDoctor = doctorList.find((item) => Number(item.user_id) === Number(user?.id));
-
-        if (selfDoctor?.user_id) {
-          const reviewsRes = await api.get(`/doctors/${selfDoctor.user_id}/reviews`);
+        const selfDoctorId = Number(user?.id);
+        if (Number.isInteger(selfDoctorId) && selfDoctorId > 0) {
+          const reviewsRes = await api.get(`/doctors/${selfDoctorId}/reviews`);
           setReviews(Array.isArray(reviewsRes?.data?.reviews) ? reviewsRes.data.reviews : []);
         } else {
           setReviews([]);
@@ -797,4 +795,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Search, Star } from "lucide-react";
 import DataTable from "../../components/ui/DataTable";
+import UserAvatar from "../../components/UserAvatar";
 import { formatShortDate, getMyHospitalContext } from "../../utils/hospitalDashboard";
 import api from "../../api/axios";
 
@@ -177,17 +178,12 @@ const Reviews = () => {
             <tr className="align-top hover:bg-slate-50/70">
               <td className="px-5 py-4 sm:px-6 lg:px-7">
                 <div className="flex items-center gap-3">
-                  {review.reviewer_profile ? (
-                    <img
-                      src={review.reviewer_profile}
-                      alt={review.reviewer_name || "Patient"}
-                      className="h-9 w-9 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-500">
-                      {String(review.reviewer_name || "P").charAt(0)}
-                    </div>
-                  )}
+                  <UserAvatar
+                    src={review.reviewer_profile}
+                    name={review.reviewer_name || "Patient"}
+                    size="h-9 w-9"
+                    className="font-semibold"
+                  />
                   <p className="font-semibold text-slate-900">{review.reviewer_name || "Patient"}</p>
                 </div>
               </td>

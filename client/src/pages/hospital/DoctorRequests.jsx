@@ -11,7 +11,7 @@ import {
 } from "../../utils/hospitalDashboard";
 import { formatTime } from "../../utils/dateTime";
 import api from "../../api/axios";
-import guestUserImage from "../../assets/guest-user.svg";
+import UserAvatar from "../../components/UserAvatar";
 
 const formatCurrency = (value) => {
   const amount = Number(value);
@@ -148,12 +148,12 @@ const DoctorRequests = () => {
     <>
       <div className="bg-white">
         {error && (
-          <div className="px-5 pt-5 sm:px-6 lg:px-7">
+          <div className="mb-4 px-5 pt-5 sm:px-6 lg:px-7">
             <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
           </div>
         )}
         {success && (
-          <div className="px-5 pt-5 sm:px-6 lg:px-7">
+          <div className="mb-4 px-5 pt-5 sm:px-6 lg:px-7">
             <p className="rounded-xl bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700">{success}</p>
           </div>
         )}
@@ -189,11 +189,12 @@ const DoctorRequests = () => {
                     <tr className="group align-top transition-colors hover:bg-slate-50/70">
                       <td className="px-5 py-4 sm:px-6 lg:px-7">
                         <div className="flex items-start gap-4">
-                          <div className="h-10 w-10 shrink-0 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-400 overflow-hidden border border-slate-200">
-                             {item.doctor_profile_picture ? (
-                               <img src={item.doctor_profile_picture} alt="" className="h-full w-full object-cover" />
-                             ) : item.doctor_name?.[0]}
-                          </div>
+                          <UserAvatar
+                            src={item.doctor_profile_picture}
+                            name={item.doctor_name || "Doctor"}
+                            size="h-10 w-10"
+                            className="font-bold"
+                          />
                           <div className="min-w-0">
                             <p className="font-semibold text-slate-800 leading-none">{item.doctor_name}</p>
                             <p className="text-[11px] font-medium text-slate-400 mt-1.5">{item.department_name || "General Medicine"}</p>

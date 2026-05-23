@@ -12,7 +12,7 @@ import {
 } from "../../utils/hospitalDashboard";
 import { formatTime } from "../../utils/dateTime";
 import api from "../../api/axios";
-import guestUserImage from "../../assets/guest-user.svg";
+import UserAvatar from "../../components/UserAvatar";
 
 const normalizeValue = (value) => String(value || "").trim().toLowerCase();
 
@@ -152,12 +152,12 @@ const ScheduleRequests = () => {
     <>
       <div className="bg-white">
         {error && (
-          <div className="px-5 pt-5 sm:px-6 lg:px-7">
+          <div className="mb-4 px-5 pt-5 sm:px-6 lg:px-7">
             <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
           </div>
         )}
         {success && (
-          <div className="px-5 pt-5 sm:px-6 lg:px-7">
+          <div className="mb-4 px-5 pt-5 sm:px-6 lg:px-7">
             <p className="rounded-xl bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700">{success}</p>
           </div>
         )}
@@ -193,20 +193,12 @@ const ScheduleRequests = () => {
                     <tr className="align-top transition-colors hover:bg-slate-50/70">
                       <td className="px-5 py-4 sm:px-6 lg:px-7">
                         <div className="flex items-start gap-4">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-slate-100 font-bold text-slate-400">
-                            {item.doctor_profile_picture ? (
-                              <img
-                                src={item.doctor_profile_picture}
-                                alt={item.doctor_name || "Doctor"}
-                                className="h-full w-full object-cover"
-                                onError={(event) => {
-                                  event.currentTarget.src = guestUserImage;
-                                }}
-                              />
-                            ) : (
-                              item.doctor_name?.[0] || "D"
-                            )}
-                          </div>
+                          <UserAvatar
+                            src={item.doctor_profile_picture}
+                            name={item.doctor_name || "Doctor"}
+                            size="h-10 w-10"
+                            className="font-bold"
+                          />
                           <div className="min-w-0">
                             <span className="font-bold leading-none text-slate-900">{item.doctor_name}</span>
                             <span className="mt-2 block text-[10px] text-slate-400">

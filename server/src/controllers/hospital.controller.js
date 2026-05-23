@@ -1,6 +1,7 @@
 import * as hospitalService from "../services/hospital.service.js";
 import * as doctorHospitalRequestService from "../services/doctorHospitalRequest.service.js";
 import pool from "../config/db.js";
+import { bustCache } from "../middlewares/cache.middleware.js";
 import fs from "fs";
 import path from "path";
 
@@ -109,6 +110,9 @@ const verifyHospitalRequest = async (req, res) => {
         const { verify, notes, adminNotes, rejectionNote, reason } = req.body;
         const note = notes || adminNotes || rejectionNote || reason || null;
         const result = await hospitalService.verifyHospitalRequest(id, verify, note);
+        if (String(verify || "").trim().toLowerCase() === "approved") {
+            await bustCache("hospitals");
+        }
         return res.status(200).json({ success: true, message: result.message });
     } catch (error) {
         return res.status(error.status || 500).json({ success: false, message: error.message });
