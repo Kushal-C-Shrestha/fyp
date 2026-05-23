@@ -2,7 +2,8 @@ import { createReactAgent, AgentExecutor } from "langchain/agents";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { getLLM } from "../config/llm.js";
 import { tools } from "./tools/index.js";
-import { getMemory, compressHistoryMessage } from "./memory.js";
+import { getMemory, compressHistoryMessage, getEntityMemory } from "./memory.js";
+import { retrieveRelevantDocs } from "../rag/retriever/retrieveDocs.js";
 
 let unifiedAgentExecutor = null;
 
@@ -16,6 +17,8 @@ Your task is to assist the user:
    - Step 2: Once you have identified the specialty, call 'search_doctors' with that specialty to find available doctors.
    NEVER call 'search_doctors' directly with raw symptoms; always map symptoms to a specialty first.
 4. Search for doctors by specialization or name using 'search_doctors'.
+   - If the user message is only a specialization name, such as "cardiology", "dermatology", or "neurology", you MUST call 'search_doctors' with that specialization.
+   - If the user asks what specializations, specialties, or specialist doctors are available, you MUST call 'search_doctors' with that full question.
 5. Check a doctor's availability using 'get_doctor_availability'.
 6. Book, list, cancel, or reschedule appointments using 'book_appointment', 'list_appointments', 'cancel_appointment', or 'reschedule_appointment'.
 
@@ -23,6 +26,7 @@ Rules:
 - NEVER output 'Action: None'. If you do not need a tool, you MUST go directly to 'Thought: I now know the final answer' followed by 'Final Answer:'.
 - Use tools only when necessary.
 - If the user is just saying hello, asking a casual question, or saying thank you, you do NOT need to call any tools. Go directly to Final Answer.
+- Never say that a doctor, specialty, or availability was not found unless the relevant tool returned no results.
 - Do NOT repeat a tool call with the exact same arguments if it already appears in Recent History or Agent Scratchpad.
 - If 'get_doctor_availability' was already called for a doctor and the slots are in Recent History or Agent Scratchpad, do NOT call it again. Use those slots to help the user book.
 - If the user wants to book an appointment and doctor availability has already been shown, ask them for the date and time they want if they haven't provided it, then call 'book_appointment'.
@@ -141,6 +145,230 @@ const extractToolMetadata = (toolOutputs = []) => {
     return metadata;
 };
 
+const SPECIALTY_NAMES = [
+    "cardiology",
+    "dermatology",
+    "endocrinology",
+    "ent",
+    "gastroenterology",
+    "general medicine",
+    "general surgery",
+    "internal medicine",
+    "neurology",
+    "ophthalmology",
+    "orthopedics",
+    "pediatrics",
+    "pulmonology",
+];
+
+const SPECIALTY_ALIASES = new Map([
+    ["cardiologist", "Cardiology"],
+    ["heart doctor", "Cardiology"],
+    ["chest doctor", "Cardiology"],
+    ["dermatologist", "Dermatology"],
+    ["skin doctor", "Dermatology"],
+    ["neurologist", "Neurology"],
+    ["brain doctor", "Neurology"],
+    ["pediatrician", "Pediatrics"],
+    ["child doctor", "Pediatrics"],
+    ["eye doctor", "Ophthalmology"],
+    ["ophthalmologist", "Ophthalmology"],
+    ["orthopedic doctor", "Orthopedics"],
+    ["orthopedist", "Orthopedics"],
+    ["bone doctor", "Orthopedics"],
+    ["ent doctor", "ENT"],
+    ["ear doctor", "ENT"],
+    ["throat doctor", "ENT"],
+    ["gastroenterologist", "Gastroenterology"],
+    ["stomach doctor", "Gastroenterology"],
+    ["pulmonologist", "Pulmonology"],
+    ["lung doctor", "Pulmonology"],
+    ["endocrinologist", "Endocrinology"],
+    ["diabetes doctor", "Endocrinology"],
+    ["thyroid doctor", "Endocrinology"],
+    ["surgeon", "General Surgery"],
+    ["general physician", "General Medicine"],
+    ["general doctor", "General Medicine"],
+]);
+
+const getTool = (name) => tools.find((tool) => tool.name === name);
+
+const isSpecialtyOnlyMessage = (message = "") =>
+    SPECIALTY_NAMES.includes(String(message || "").trim().toLowerCase());
+
+const specialtyAliasForMessage = (message = "") => {
+    const normalized = String(message || "").trim().toLowerCase();
+    if (SPECIALTY_ALIASES.has(normalized)) return SPECIALTY_ALIASES.get(normalized);
+
+    for (const [alias, specialty] of SPECIALTY_ALIASES.entries()) {
+        if (new RegExp(`\\b${alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(normalized)) {
+            return specialty;
+        }
+    }
+    return "";
+};
+
+const isSpecializationListMessage = (message = "") =>
+    /\b(what|which|list|show|available)\b/i.test(message)
+    && /\b(speciali[sz]ations?|specialties|specialists?)\b/i.test(message);
+
+const symptomMessageNeedsMapping = (message = "") =>
+    /\b(chest pains?|chest discomfort|palpitations|high blood pressure|irregular heartbeat|swelling in legs|headaches?|migraine|dizziness|numbness|tingling|rash|itching|acne|eczema|cough|wheezing|asthma|stomach|acidity|heartburn|joint pain|back pain|ear pain|sore throat|eye pain|blurry vision|vision loss|thyroid|diabetes|blood sugar|weight gain|weight loss|child fever|baby fever|poor feeding|growth concern|lump|hernia|abscess|wound|anxiety|panic attacks?|sleep problems?|fever|chills)\b/i.test(message);
+
+const specialtyArticle = (specialty = "") =>
+    /^[aeiou]/i.test(String(specialty).trim()) ? "an" : "a";
+
+const isDoctorRegistrationQuestion = (message = "") =>
+    /\b(register|registration|sign up|signup|apply|join|become)\b/i.test(message)
+    && /\b(doctor|dr|physician)\b/i.test(message);
+
+const isHospitalRegistrationQuestion = (message = "") =>
+    /\b(register|registration|sign up|signup|apply|join|list)\b/i.test(message)
+    && /\b(hospital|clinic)\b/i.test(message);
+
+const isAvailabilityQuestion = (message = "") =>
+    /\b(available|availability|free|slots?|schedule|timings?|time|when)\b/i.test(message);
+
+const findRememberedDoctorMention = (sessionId, message = "") => {
+    const normalizedMessage = String(message || "").toLowerCase();
+    const rememberedDoctors = getEntityMemory(sessionId).doctors || [];
+
+    return rememberedDoctors.find((doctor) => {
+        const nameParts = String(doctor.name || "")
+            .toLowerCase()
+            .split(/\s+/)
+            .filter((part) => part.length >= 3);
+
+        if (!doctor.id || nameParts.length === 0) return false;
+
+        const firstName = nameParts[0];
+        const lastName = nameParts[nameParts.length - 1];
+        return normalizedMessage.includes(firstName)
+            || normalizedMessage.includes(lastName)
+            || nameParts.every((part) => normalizedMessage.includes(part));
+    });
+};
+
+const withTimeout = (promise, timeoutMs) =>
+    Promise.race([
+        promise,
+        new Promise((_, reject) => {
+            const timer = setTimeout(() => reject(new Error(`Timed out after ${timeoutMs}ms`)), timeoutMs);
+            timer.unref?.();
+        }),
+    ]);
+
+const getRagSourcesForAnswer = async (query) => {
+    try {
+        const { contextText } = await withTimeout(
+            retrieveRelevantDocs(query, { k: 4, maxChars: 3200, maxCharsPerDoc: 900 }),
+            4000,
+        );
+        const sources = [...new Set(
+            [...String(contextText || "").matchAll(/### Source \d+\s*\(([^)]+)\)/g)]
+                .map((match) => match[1])
+        )];
+        return sources.length > 0 ? `\n\nSource: ${sources.join(", ")}` : "";
+    } catch {
+        return "";
+    }
+};
+
+const doctorRegistrationAnswer = async () => {
+    const sourceNote = await getRagSourcesForAnswer(
+        "doctor registration verification requirements medical license professional credentials verification documents approval process"
+    );
+    return `To register as a doctor on e-Swasthya, go to /register/doctor and submit your doctor verification request.
+
+You will need:
+1. Basic details: name, email, phone, date of birth, gender, and professional bio.
+2. Professional details: medical license number, experience years, specialization, and consultation fee.
+3. Verification documents: medical council registration certificate and citizenship or government-issued ID.
+4. Optional credibility documents: academic certificates, experience letters, or specialization/fellowship certificates.
+
+After submission, an admin reviews your request. If approved, your doctor profile becomes visible and eligible for appointment bookings.${sourceNote}`;
+};
+
+const hospitalRegistrationAnswer = async () => {
+    const sourceNote = await getRagSourcesForAnswer(
+        "hospital clinic registration verification requirements registration certificate operating license administrator details approval process"
+    );
+    return `To register a hospital or clinic on e-Swasthya, go to /register/hospital and submit the verification request.
+
+You will need:
+1. Hospital details: official name, type, description, address, and contact information.
+2. Legal details: registration number and operating license or authority details.
+3. Admin details: the hospital administrator's name, email, phone, date of birth, and gender.
+4. Verification documents: registration certificate, license/permission to operate, and authorized representative ID.
+
+After submission, an admin reviews the request. If approved, the hospital can be listed and manage doctors/bookings.${sourceNote}`;
+};
+
+const tryDeterministicToolResponse = async (sessionId, userMessage) => {
+    const searchDoctors = getTool("search_doctors");
+    if (!searchDoctors) return null;
+
+    if (isAvailabilityQuestion(userMessage)) {
+        const mentionedDoctor = findRememberedDoctorMention(sessionId, userMessage);
+        const availabilityTool = getTool("get_doctor_availability");
+        if (mentionedDoctor && availabilityTool) {
+            const output = await availabilityTool.invoke({ doctor_id: mentionedDoctor.id });
+            return {
+                message: `Here is ${mentionedDoctor.name}'s availability:\n\n${stripSourceMarkers(output)}`,
+                metadata: extractToolMetadata([{ tool: "get_doctor_availability", output }]),
+            };
+        }
+    }
+
+    if (isDoctorRegistrationQuestion(userMessage)) {
+        return { message: await doctorRegistrationAnswer(), metadata: {} };
+    }
+
+    if (isHospitalRegistrationQuestion(userMessage)) {
+        return { message: await hospitalRegistrationAnswer(), metadata: {} };
+    }
+
+    const aliasedSpecialty = specialtyAliasForMessage(userMessage);
+
+    if (isSpecialtyOnlyMessage(userMessage) || aliasedSpecialty || isSpecializationListMessage(userMessage)) {
+        const output = await searchDoctors.invoke({ q: aliasedSpecialty || userMessage });
+        return {
+            message: stripSourceMarkers(output),
+            metadata: extractToolMetadata([{ tool: "search_doctors", output }]),
+        };
+    }
+
+    if (!symptomMessageNeedsMapping(userMessage)) return null;
+
+    const searchKnowledgeBase = getTool("search_knowledge_base");
+    if (!searchKnowledgeBase) return null;
+
+    const mappingOutput = await searchKnowledgeBase.invoke({ query: userMessage });
+    const specialtyMatch = String(mappingOutput || "").match(/Recommended Specialty:\s*([A-Za-z ]+)/i);
+    const specialty = specialtyMatch?.[1]?.trim();
+    if (!specialty) return null;
+
+    let doctorOutput = await searchDoctors.invoke({ q: specialty });
+    let doctorSpecialty = specialty;
+    if (/^No doctors found\.?$/i.test(String(doctorOutput || "").trim())) {
+        doctorSpecialty = "General Medicine";
+        doctorOutput = await searchDoctors.invoke({ q: doctorSpecialty });
+    }
+    const metadata = extractToolMetadata([{ tool: "search_doctors", output: doctorOutput }]);
+    const emergencyNote = String(mappingOutput || "").includes("Important:")
+        ? `\n\n${String(mappingOutput).split("Important:")[1].trim()}`
+        : "";
+
+    return {
+        message: stripSourceMarkers(
+            doctorSpecialty === specialty
+                ? `Based on your symptoms, you should consult ${specialtyArticle(specialty)} ${specialty} specialist.${emergencyNote}\n\n${doctorOutput}\n\nWould you like to check availability or book an appointment with one of these doctors?`
+                : `Based on your symptoms, ${specialty} may be relevant, but I could not find available ${specialty} doctors right now. A General Medicine doctor is a good first step and can refer you if needed.${emergencyNote}\n\n${doctorOutput}\n\nWould you like to check availability or book an appointment with one of these doctors?`
+        ),
+        metadata,
+    };
+};
+
 // If the agent hit max iterations or leaked ReAct format, extract the last useful text
 const postProcessAgentOutput = (output, stepsText = "") => {
     const answer = String(output || "").trim();
@@ -178,6 +406,11 @@ const postProcessAgentOutput = (output, stepsText = "") => {
 };
 
 export const runAgent = async (sessionId, userMessage, context = "N/A", onProgress = null) => {
+    const deterministicResult = await tryDeterministicToolResponse(sessionId, userMessage);
+    if (deterministicResult) {
+        return deterministicResult;
+    }
+
     if (!unifiedAgentExecutor) {
         unifiedAgentExecutor = await buildAgent();
     }

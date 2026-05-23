@@ -49,4 +49,4 @@ const sharedConfig = {
 export default {
   development: sharedConfig,
   production: sharedConfig,
-};
+};  

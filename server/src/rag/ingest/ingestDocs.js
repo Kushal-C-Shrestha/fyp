@@ -99,8 +99,6 @@ async function storeChunks({ chunks, embeddings, tableName }) {
     await pool.query(`TRUNCATE TABLE ${tableName} RESTART IDENTITY;`);
     await vectorStore.addDocuments(chunks);
 
-    await vectorStore.end?.();
-
     return chunks.length;
 }
 
@@ -136,6 +134,16 @@ try {
     console.error("Ingestion failed:", err);
     process.exitCode = 1;
 } finally {
-    await pool.end();
+    try {
+        await Promise.race([
+            pool.end(),
+            new Promise((resolve) => {
+                const timer = setTimeout(resolve, 3000);
+                timer.unref?.();
+            }),
+        ]);
+    } catch (err) {
+        console.error("Failed to close database pool cleanly:", err);
+    }
     process.exit(process.exitCode ?? 0);
 }

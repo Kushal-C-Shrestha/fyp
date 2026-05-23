@@ -18,18 +18,42 @@ const isAvailableTodayQuery = (query = "") =>
     && /\b(doctors?|specialists?)\b/i.test(query)
     && /\b(today|now)\b/i.test(query);
 
+const isSpecializationListQuery = (query = "") =>
+    /\b(what|which|list|show|available)\b/i.test(query)
+    && /\b(speciali[sz]ations?|specialties|specialists?)\b/i.test(query);
+
+const formatDoctor = (doctor, index = null) => {
+    const prefix = index === null ? "" : `${index + 1}. `;
+    return `${prefix}ID: ${doctor.id}, Name: ${doctor.name}, Specialty: ${doctor.specialization}, Hospital: ${doctor.hospitalName}, Hospital ID: ${doctor.hospitalId || "N/A"}`;
+};
+
+const formatAvailableSpecializations = async () => {
+    const doctors = await searchDoctors({ q: "" });
+    const specializations = [...new Set(
+        doctors
+            .filter((doctor) => doctor.hospitalId && doctor.hospitalName)
+            .flatMap((doctor) => String(doctor.specialization || "")
+                .split(/\s*,\s*/)
+                .map((item) => item.trim())
+                .filter(Boolean))
+    )].sort((a, b) => a.localeCompare(b));
+
+    if (!specializations.length) return "No doctor specializations are currently available.";
+    return `Available doctor specializations:\n${specializations.map((name, index) => `${index + 1}. ${name}`).join("\n")}`;
+};
+
 const formatDoctorsAvailableToday = async () => {
     const today = todayInNepal();
     const doctors = await searchDoctors({ q: "" });
     const unique = [...new Map(
         doctors
-            .filter((doctor) => doctor.user_id && doctor.hospital_id)
-            .map((doctor) => [doctor.user_id, doctor])
+            .filter((doctor) => doctor.id && doctor.hospitalId)
+            .map((doctor) => [doctor.id, doctor])
     ).values()];
 
     const available = [];
     for (const doctor of unique.slice(0, 20)) {
-        const hospitals = await generateAvailableSlots(doctor.user_id, today);
+        const hospitals = await generateAvailableSlots(doctor.id, today);
         const firstHospital = (hospitals || []).find((hospital) =>
             (hospital.days || []).some((day) =>
                 (day.slots || []).some((slot) => slot.status === "available")
@@ -43,8 +67,8 @@ const formatDoctorsAvailableToday = async () => {
         const firstSlot = day.slots.find((slot) => slot.status === "available");
         available.push({
             ...doctor,
-            hospital_id: firstHospital.hospitalId || doctor.hospital_id,
-            hospital_name: firstHospital.hospitalName || doctor.hospital_name,
+            hospitalId: firstHospital.hospitalId || doctor.hospitalId,
+            hospitalName: firstHospital.hospitalName || doctor.hospitalName,
             firstSlot: firstSlot?.start_time || "",
             date: today,
         });
@@ -54,7 +78,7 @@ const formatDoctorsAvailableToday = async () => {
     if (!available.length) return `No doctors have available slots for today (${today}).`;
 
     return available.map((doctor, index) =>
-        `${index + 1}. ID: ${doctor.user_id}, Name: ${doctor.user_name}, Specialty: ${doctor.specialization_name}, Hospital: ${doctor.hospital_name}, Hospital ID: ${doctor.hospital_id}, Today: ${doctor.firstSlot}`
+        `${index + 1}. ID: ${doctor.id}, Name: ${doctor.name}, Specialty: ${doctor.specialization}, Hospital: ${doctor.hospitalName}, Hospital ID: ${doctor.hospitalId}, Today: ${doctor.firstSlot}`
     ).join("\n");
 };
 
@@ -90,16 +114,17 @@ const doctorSearchTool = new DynamicStructuredTool({
     func: async ({ q }) => {
         try {
             const query = typeof q === 'string' ? q : (q?.q || JSON.stringify(q));
+            if (isSpecializationListQuery(query)) {
+                return await formatAvailableSpecializations();
+            }
             if (isAvailableTodayQuery(query)) {
                 return await formatDoctorsAvailableToday();
             }
             const results = (await searchDoctors({ q: query }))
-                .filter((doc) => doc.hospital_id && doc.hospital_name);
+                .filter((doc) => doc.hospitalId && doc.hospitalName);
             if (!results || results.length === 0) return "No doctors found.";
             
-            return results.slice(0, 5).map(doc => 
-                `ID: ${doc.user_id}, Name: ${doc.user_name}, Specialty: ${doc.specialization_name}, Hospital: ${doc.hospital_name}, Hospital ID: ${doc.hospital_id || "N/A"}`
-            ).join("\n");
+            return results.slice(0, 5).map((doc) => formatDoctor(doc)).join("\n");
         } catch (error) {
             return `Error: ${error.message}`;
         }

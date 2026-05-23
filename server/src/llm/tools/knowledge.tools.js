@@ -46,6 +46,34 @@ const fallbackDocsSearch = (query) => {
         .join("\n\n");
 };
 
+const symptomSpecialtyShortcut = (query = "") => {
+    const text = String(query || "").toLowerCase();
+    const mappings = [
+        { pattern: /\b(chest pains?|chest discomfort|chest doctor|heart doctor|cardiologist|palpitations|high blood pressure|irregular heartbeat|swelling in legs)\b/, specialty: "Cardiology" },
+        { pattern: /\b(headaches?|migraine|dizziness|numbness|tingling|seizure|tremors?)\b/, specialty: "Neurology" },
+        { pattern: /\b(rash|itching|acne|eczema|skin doctor|dermatologist|skin|hair loss|dandruff|nail)\b/, specialty: "Dermatology" },
+        { pattern: /\b(cough|wheezing|asthma|chest congestion|breathing difficulty)\b/, specialty: "Pulmonology" },
+        { pattern: /\b(stomach|acidity|heartburn|bloating|nausea|vomiting|constipation|diarrhea)\b/, specialty: "Gastroenterology" },
+        { pattern: /\b(joint pain|back pain|knee pain|shoulder pain|muscle pain|sports injury)\b/, specialty: "Orthopedics" },
+        { pattern: /\b(ear pain|hearing loss|sore throat|tonsil|sinus|nasal|vertigo)\b/, specialty: "ENT" },
+        { pattern: /\b(eye pain|red eye|blurry vision|vision loss|watery eyes|eye strain|light sensitivity|double vision|eye injury)\b/, specialty: "Ophthalmology" },
+        { pattern: /\b(thyroid|diabetes|blood sugar|weight gain|weight loss|excessive thirst|frequent urination|hormonal imbalance)\b/, specialty: "Endocrinology" },
+        { pattern: /\b(child fever|baby fever|poor feeding|growth concern|vaccination|child cough)\b/, specialty: "Pediatrics" },
+        { pattern: /\b(lump|hernia|abscess|boil|wound|surgical consultation)\b/, specialty: "General Surgery" },
+        { pattern: /\b(anxiety|stress|panic attacks?|mood swings?|sadness|sleep problems?|suicidal|self harm)\b/, specialty: "Psychiatry" },
+        { pattern: /\b(fever|chills|body ache|fatigue)\b/, specialty: "General Medicine" },
+    ];
+
+    const match = mappings.find((item) => item.pattern.test(text));
+    if (!match) return "";
+
+    const urgentNote = /\b(severe|sudden|shortness of breath|difficulty breathing|sweating|faint|loss of consciousness)\b/.test(text)
+        ? "\nImportant: severe or sudden chest pain, breathing difficulty, fainting, or sweating needs immediate emergency medical attention."
+        : "";
+
+    return `Recommended Specialty: ${match.specialty}.${urgentNote}`;
+};
+
 export const knowledgeBaseTool = new DynamicStructuredTool({
     name: "search_knowledge_base",
     description: `
@@ -80,6 +108,9 @@ export const knowledgeBaseTool = new DynamicStructuredTool({
     func: async (input) => {
         try {
             const query = typeof input === 'string' ? input : (input?.query || JSON.stringify(input));
+            const shortcut = symptomSpecialtyShortcut(query);
+            if (shortcut) return shortcut;
+
             if (/\b(doctor names?|available doctors?|specialists?|profiles?|appointment slots?|availability|cardiology specialists?|dermatology specialists?)\b/i.test(query)
                 && !/\b(symptom|chest pain|pain|fever|cough|rash|headache|blood pressure|swelling|registration|register|how to|requirements?|documents?)\b/i.test(query)) {
                 return "This query asks for live doctor listings or availability. Use the search_doctors tool with the specialty/name instead of the knowledge base.";
