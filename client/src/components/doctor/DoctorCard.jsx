@@ -82,10 +82,7 @@ const DoctorCard = ({
                   <div className="flex items-center gap-1.5 min-w-0">
                     <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-500" />
                     <span className="truncate">
-                      {doctor.address || 'Address not specified'} •{' '}
-                      <span className="font-semibold text-emerald-700">
-                        Fee: Rs {Number(doctor.consultationFee || 0).toLocaleString()}
-                      </span>
+                      {doctor.address || 'Address not specified'}
                     </span>
                   </div>
                 </div>
@@ -140,10 +137,7 @@ const DoctorCard = ({
                   <div className="flex items-center gap-1.5 min-w-0">
                     <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-500" />
                     <span className="truncate">
-                      {doctor.address || 'Address not specified'} •{' '}
-                      <span className="font-semibold text-emerald-700 text-xs">
-                        Fee: Rs {Number(doctor.consultationFee || 0).toLocaleString()}
-                      </span>
+                      {doctor.address || 'Address not specified'}
                     </span>
                   </div>
                 </div>

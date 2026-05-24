@@ -8,6 +8,7 @@ import {
     isValidPassword,
 } from "../utils/validation.js";
 import { generateSlots } from '../utils/slot.util.js'
+import { sendApprovalEmail, sendRejectionEmail } from "./email.service.js";
 
 dotenv.config();
 
@@ -1071,7 +1072,7 @@ const registerDoctorRequest = async ({ body, files }) => {
     }
 };
 
-const completeDoctorRequest = async (requestId, status, doctorRequest) => {
+const completeDoctorRequest = async (requestId, status, doctorRequest, rejectionNote = null) => {
     const client = await pool.connect();
 
     try {
@@ -1080,10 +1081,11 @@ const completeDoctorRequest = async (requestId, status, doctorRequest) => {
         await client.query(
             `
                 UPDATE doctor_requests
-                SET approval_status = $1::approval_status_enum
+                SET approval_status = $1::approval_status_enum,
+                    request_note = CASE WHEN $1::text = 'rejected' THEN $3 ELSE request_note END
                 WHERE id = $2
             `,
-            [status, requestId],
+            [status, requestId, rejectionNote],
         );
 
         if (status === "rejected") {
@@ -1289,7 +1291,7 @@ const completeDoctorRequest = async (requestId, status, doctorRequest) => {
     }
 };
 
-const verifyDoctorRequest = async (requestId, status, user) => {
+const verifyDoctorRequest = async (requestId, status, user, rejectionNote = null) => {
     const id = Number.parseInt(requestId, 10);
 
     if (!isNonEmptyString(String(requestId || "")) || !isNonEmptyString(status)) {
@@ -1373,12 +1375,29 @@ const verifyDoctorRequest = async (requestId, status, user) => {
             throw error;
         }
 
-        const result = await completeDoctorRequest(id, status, doctorRequest);
+        const result = await completeDoctorRequest(id, status, doctorRequest, rejectionNote);
 
         if (!result.success) {
             const error = new Error(result.message);
             error.status = 400;
             throw error;
+        }
+
+        const emailPayload = {
+            to: doctorRequest.email,
+            name: doctorRequest.full_name,
+            accountType: "doctor",
+        };
+
+        if (status === "approved") {
+            sendApprovalEmail(emailPayload).catch((e) =>
+                console.error("Failed to send doctor approval email:", e)
+            );
+        } else {
+            sendRejectionEmail({
+                ...emailPayload,
+                reason: rejectionNote,
+            }).catch((e) => console.error("Failed to send doctor rejection email:", e));
         }
 
         return { message: result.message };

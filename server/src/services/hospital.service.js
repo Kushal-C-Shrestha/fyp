@@ -646,7 +646,8 @@ export const verifyHospitalRequest = async (id, verify, rejectionNote = null) =>
             sendRejectionEmail({
                 to: admin.email,
                 name: admin.full_name,
-                reason: rejectionNote
+                reason: rejectionNote,
+                accountType: "hospital"
             }).catch((e) => console.error("Failed to send rejection email:", e));
 
             return { message: "Hospital request rejected successfully." };
@@ -834,7 +835,8 @@ export const verifyHospitalRequest = async (id, verify, rejectionNote = null) =>
             }).catch(e => console.error("Failed to create approval notification:", e)),
             sendApprovalEmail({
                 to: admin.email,
-                name: admin.full_name
+                name: admin.full_name,
+                accountType: "hospital"
             }).catch(e => console.error("Failed to send approval email:", e))
         ]);
 

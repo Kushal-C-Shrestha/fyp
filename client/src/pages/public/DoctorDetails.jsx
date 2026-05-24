@@ -173,7 +173,6 @@ const DoctorDetails = () => {
                           {hospital.hospital_address || 'Address not listed'}
                         </p>
                       </div>
-                      <p className="mt-2 text-sm font-medium text-emerald-700">Consultation Fee: Rs {Number(hospital.consultation_fee || 0).toLocaleString()}</p>
                       {hospital.schedule?.length > 0 ? (
                         <div className="space-y-1.5 mt-3">
                           {hospital.schedule.map((slot, slotIdx) => (

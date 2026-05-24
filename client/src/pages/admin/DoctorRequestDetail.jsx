@@ -175,11 +175,9 @@ const AdminDoctorRequestDetail = () => {
               <button
                 onClick={() => handleVerify("rejected")}
                 disabled={verifying}
-                className="inline-flex h-9 items-center gap-2 rounded-xl border border-rose-200 bg-white px-3.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex h-9 items-center gap-2 rounded-xl bg-rose-600 px-3.5 text-xs font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-600">
-                  <X className="h-3.5 w-3.5" />
-                </span>
+                <X className="h-3.5 w-3.5" />
                 Reject
               </button>
               <button
@@ -187,9 +185,7 @@ const AdminDoctorRequestDetail = () => {
                 disabled={verifying}
                 className="inline-flex h-9 items-center gap-2 rounded-xl bg-emerald-700 px-3.5 text-xs font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/15 text-white">
-                  <Check className="h-3.5 w-3.5" />
-                </span>
+                <Check className="h-3.5 w-3.5" />
                 Approve Registration
               </button>
               </>
@@ -263,7 +259,9 @@ const AdminDoctorRequestDetail = () => {
                 <DetailRow label="Specializations" value={formatList(request.specializations)} />
                 <div className="mt-8">
                   <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">Professional Summary</dt>
-                  <dd className="mt-3 text-sm leading-relaxed text-slate-700 max-w-3xl">{formatText(request.doctor_description)}</dd>
+                  <dd className="mt-3 max-w-3xl break-words text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
+                    {formatText(request.doctor_description)}
+                  </dd>
                 </div>
               </div>
             </Section>

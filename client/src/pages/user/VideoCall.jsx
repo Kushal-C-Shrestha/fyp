@@ -24,11 +24,11 @@ const VideoCall = () => {
 
   // Resolve participant details dynamically
   const participantName = isDoctor
-    ? (searchParams.get("patient") || searchParams.get("participant") || "Patient")
-    : (searchParams.get("participant") || searchParams.get("patient") || "Doctor");
+    ? (searchParams.get("patient"))
+    : (searchParams.get("participant"));
   const participantImage = isDoctor
-    ? (searchParams.get("patientImage") || searchParams.get("participantImage") || "")
-    : (searchParams.get("participantImage") || searchParams.get("patientImage") || "");
+    ? (searchParams.get("patientImage") || "")
+    : (searchParams.get("participantImage") || "");
 
   const [status, setStatus] = useState("waiting");
   const [isMuted, setIsMuted] = useState(false);

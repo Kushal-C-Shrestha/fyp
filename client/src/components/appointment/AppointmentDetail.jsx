@@ -37,19 +37,19 @@ const openPatientVideoCall = (apt) => {
 const AppointmentDetail = ({
   selected,
   setSelectedId,
-  onReschedule,        // Doctor's callback
-  setRescheduleTarget, // Patient's callback
-  onCancel,            // Doctor's callback
-  handleCancel,        // Patient's callback
+  onReschedule,
+  setRescheduleTarget,
+  onCancel,
+  handleCancel,
   cancelLoading,
   onComplete,
   completeLoading,
   callStatus = 'waiting',
   onRecordsAttached,
   isDoctor = false,
-  onStartCall,         // New: custom start call override
-  extraActions,        // New: custom buttons in the action bar
-  children,            // New: custom children rendered after metadata
+  onStartCall,
+  extraActions,
+  children,
 }) => {
   const navigate = useNavigate();
   const [recordError, setRecordError] = useState('');

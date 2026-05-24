@@ -1,7 +1,16 @@
 import { sendEmail } from "../utils/mailer.util.js";
 
 
-const buildEmailContentByPurpose = ({ purpose }) => {
+const getRegistrationLabel = (accountType = "account") => {
+  const normalized = String(accountType || "").trim().toLowerCase();
+  if (normalized === "doctor") return "doctor registration request";
+  if (normalized === "hospital") return "hospital registration request";
+  return "registration request";
+};
+
+const buildEmailContentByPurpose = ({ purpose, accountType = "account" }) => {
+  const registrationLabel = getRegistrationLabel(accountType);
+
   if (purpose === "reset-password") {
     return {
       subject: "Password Reset OTP",
@@ -25,7 +34,7 @@ const buildEmailContentByPurpose = ({ purpose }) => {
       subject: "Account Approved - e-Swasthya",
       title: "Welcome to e-Swasthya",
       purposeLabel: "Approval",
-      message: "Congratulations! Your account has been reviewed and approved by our medical board. You can now access your dashboard and start using our platform."
+      message: `Congratulations! Your ${registrationLabel} has been reviewed and approved. You can now access your dashboard and start using e-Swasthya.`
     };
   }
 
@@ -34,7 +43,7 @@ const buildEmailContentByPurpose = ({ purpose }) => {
       subject: "Registration Update - e-Swasthya",
       title: "Registration Request Status",
       purposeLabel: "Rejection",
-      message: "Thank you for your interest in e-Swasthya. After careful review, our medical board has decided to reject your hospital registration request at this time. If you believe this was in error or wish to submit additional details, please contact our support team."
+      message: `Thank you for your interest in e-Swasthya. After careful review, your ${registrationLabel} was rejected at this time. If you believe this was in error or wish to submit additional details, please contact our support team.`
     };
   }
 };
@@ -62,10 +71,10 @@ export const sendOtpEmail = async ({ to, otp, expiresIn, purpose }) => {
   });
 };
 
-export const sendApprovalEmail = async ({ to, name }) => {
+export const sendApprovalEmail = async ({ to, name, accountType = "account" }) => {
   if (!to) return;
 
-  const emailContent = buildEmailContentByPurpose({ purpose: "approval" });
+  const emailContent = buildEmailContentByPurpose({ purpose: "approval", accountType });
 
   await sendEmail({
     to,
@@ -80,10 +89,10 @@ export const sendApprovalEmail = async ({ to, name }) => {
   });
 };
 
-export const sendRejectionEmail = async ({ to, name, reason }) => {
+export const sendRejectionEmail = async ({ to, name, reason, accountType = "account" }) => {
   if (!to) return;
 
-  const emailContent = buildEmailContentByPurpose({ purpose: "rejection" });
+  const emailContent = buildEmailContentByPurpose({ purpose: "rejection", accountType });
   let message = emailContent.message;
   if (reason) {
     message += `\n\nReason for rejection:\n${reason}`;

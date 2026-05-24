@@ -257,9 +257,10 @@ const registerDoctorRequest = async (req, res) => {
 const verifyDoctorRequest = async (req, res) => {
     try {
         const { requestId } = req.params;
-        const { status } = req.body;
+        const { status, notes, adminNotes, rejectionNote, reason } = req.body;
+        const note = notes || adminNotes || rejectionNote || reason || null;
         const user = req.user;
-        const result = await doctorService.verifyDoctorRequest(requestId, status, user);
+        const result = await doctorService.verifyDoctorRequest(requestId, status, user, note);
         if (String(status || "").trim().toLowerCase() === "approved") {
             await Promise.all([bustCache("doctors"), bustCache("hospitals")]);
         }
