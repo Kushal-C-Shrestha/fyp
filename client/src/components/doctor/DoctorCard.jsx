@@ -17,8 +17,28 @@ const DoctorCard = ({
 
   const isHorizontal = layout === 'horizontal';
   const shouldOpenDetailsOnCardClick = !showViewButton;
+  const hospitalTimings = Array.isArray(doctor.hospitalTimings) ? doctor.hospitalTimings : [];
 
   const formattedRating = `${doctor.rating.toFixed(1)} (${doctor.reviewCount} reviews)`;
+  const renderHospitalTimings = () => {
+    if (hospitalTimings.length === 0) {
+      return doctor.hospitalName || 'Hospital unavailable';
+    }
+
+    return hospitalTimings.map((item, index) => {
+      const startTime = formatTime(item.start_time);
+      const endTime = formatTime(item.end_time);
+
+      return (
+        <span key={`${item.hospital_id}-${index}`} className="block truncate">
+          <span className="font-medium text-slate-800">
+            {item.hospital_name}
+          </span>
+          {startTime && endTime ? ` (${startTime} - ${endTime})` : ''}
+        </span>
+      );
+    });
+  };
 
   return (
     <div
@@ -32,7 +52,7 @@ const DoctorCard = ({
     >
       <div className={isHorizontal ? 'flex flex-col md:flex-row md:items-stretch' : ''}>
         <div
-          className={`relative overflow-hiddenflex items-center justify-center ${isHorizontal ? 'h-40 w-full md:h-44 md:w-44 md:shrink-0' : 'h-40 w-full'
+          className={`relative flex items-center justify-center overflow-hidden ${isHorizontal ? 'h-40 w-full md:h-44 md:w-44 md:shrink-0' : 'h-40 w-full'
             }`}
         >
           <UserAvatar
@@ -60,21 +80,11 @@ const DoctorCard = ({
                   {doctor.specialization}
                 </p>
 
-                <div className="mt-2.5 flex items-center gap-1.5 text-sm text-slate-600">
-                  <Building2 className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+                <div className="mt-2.5 flex items-start gap-1.5 text-sm text-slate-600">
+                  <Building2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" />
 
-                  <span className="truncate">
-                    {doctor.hospitalTimings.length > 0
-                      ? doctor.hospitalTimings.map((item, index) => (
-                        <span key={`${item.hospital_id}-${index}`}>
-                          <span className="font-medium text-slate-800">
-                            {item.hospital_name}
-                          </span>
-                          {formatTime(item.start_time) ? ` (${formatTime(item.start_time)} - ${formatTime(item.end_time)})` : ''}
-                          {index < doctor.hospitalTimings.length - 1 ? ', ' : ''}
-                        </span>
-                      ))
-                      : doctor.hospitalName || 'Hospital unavailable'}
+                  <span className="min-w-0 flex-1 space-y-0.5">
+                    {renderHospitalTimings()}
                   </span>
                 </div>
 
@@ -115,21 +125,11 @@ const DoctorCard = ({
                   {doctor.name}
                 </h3>
 
-                <div className="mt-2.5 flex items-center gap-1.5 text-sm text-slate-600">
-                  <Building2 className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+                <div className="mt-2.5 flex items-start gap-1.5 text-sm text-slate-600">
+                  <Building2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" />
 
-                  <span className="truncate">
-                    {doctor.hospitalTimings.length > 0
-                      ? doctor.hospitalTimings.map((item, index) => (
-                        <span key={`${item.hospital_id}-${index}`}>
-                          <span className="font-medium text-slate-800">
-                            {item.hospital_name}
-                          </span>
-                          {formatTime(item.start_time) ? ` (${formatTime(item.start_time)} - ${formatTime(item.end_time)})` : ''}
-                          {index < doctor.hospitalTimings.length - 1 ? ', ' : ''}
-                        </span>
-                      ))
-                      : doctor.hospitalName || 'Hospital unavailable'}
+                  <span className="min-w-0 flex-1 space-y-0.5">
+                    {renderHospitalTimings()}
                   </span>
                 </div>
 
@@ -167,8 +167,8 @@ const DoctorCard = ({
             <div
               className={`${isHorizontal
                 ? showViewButton
-                  ? 'flex gap-2 md:w-[220px] md:shrink-0 md:self-center'
-                  : 'flex md:w-36 md:shrink-0 md:self-center'
+                  ? 'flex w-full gap-2 md:ml-auto md:w-[220px] md:shrink-0 md:self-center'
+                  : 'flex w-full md:ml-auto md:w-44 md:shrink-0 md:self-center'
                 : 'mt-4 grid grid-cols-2 gap-2'
                 }`}
             >
@@ -176,7 +176,10 @@ const DoctorCard = ({
                 <button
                   className={`rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold transition hover:bg-slate-50 ${isHorizontal ? 'flex-1' : ''
                     }`}
-                  onClick={() => navigate(`/doctors/${doctor.id}`)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    navigate(`/doctors/${doctor.id}`);
+                  }}
                 >
                   View Profile
                 </button>
@@ -184,14 +187,15 @@ const DoctorCard = ({
 
               {showBookButton && (
                 <button
-                  className={`rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-800 ${isHorizontal ? 'flex-1' : ''
+                  className={`rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-800 ${isHorizontal ? 'flex-1 whitespace-nowrap' : ''
                     }`}
-                  onClick={() =>
+                  onClick={(event) => {
+                    event.stopPropagation();
                     navigate(
                       user ? `/doctors/${doctor.id}/book-appointment` : '/login',
                       { state: { doctor } }
-                    )
-                  }
+                    );
+                  }}
                 >
                   Book Appointment
                 </button>

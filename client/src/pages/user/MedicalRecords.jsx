@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { Check, Eye, Loader2, Pencil, Plus, Trash2, X } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
 import AddRecordModal from '../../components/user/AddRecordModal.jsx';
 import api from '../../api/axios';
-import { getRecordViewPath, openProtectedFile } from '../../utils/fileAccess';
+
+const getUploadErrorMessage = (err, fallback) =>
+  err?.response?.data?.message || err?.message || fallback;
 
 const extractFileName = (path = '') => {
   if (!path) return '';
@@ -10,6 +12,15 @@ const extractFileName = (path = '') => {
   const sanitized = fileName.replace(/^\d+-/, "");
   return sanitized;
 };
+
+const normalizeRecord = (record) => ({
+  id: record.record_id,
+  title: record.record_title || record.record_name || 'Medical Record',
+  fileName: extractFileName(record.record_file),
+  createdAt: record.uploaded_at || record.created_at
+    ? new Date(record.uploaded_at || record.created_at).toISOString().slice(0, 10)
+    : '-',
+});
 
 const MedicalRecords = () => {
   const [records, setRecords] = useState([]);
@@ -23,31 +34,26 @@ const MedicalRecords = () => {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('date-desc');
 
-  useEffect(() => {
-    const fetchRecords = async () => {
-      try {
-        setError('');
-        const { data } = await api.get('/records');
-        const normalized = Array.isArray(data?.records)
-          ? data.records.map((record) => ({
-            id: record.record_id,
-            title: record.record_title,
-            fileName: extractFileName(record.record_file),
-            createdAt: record.uploaded_at
-              ? new Date(record.uploaded_at).toISOString().slice(0, 10)
-              : '-',
-          }))
-          : [];
-        setRecords(normalized);
-      } catch (err) {
-        setRecords([]);
-        setError(err?.response?.data?.message || 'Failed to load medical records.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchRecords();
+  const fetchRecords = useCallback(async ({ showLoading = false } = {}) => {
+    try {
+      if (showLoading) setLoading(true);
+      setError('');
+      const { data } = await api.get('/records');
+      const normalized = Array.isArray(data?.records)
+        ? data.records.map(normalizeRecord)
+        : [];
+      setRecords(normalized);
+    } catch (err) {
+      setRecords([]);
+      setError(err?.response?.data?.message || 'Failed to load medical records.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchRecords();
+  }, [fetchRecords]);
 
   const onFormChange = (e) => {
     const { name, value, files } = e.target;
@@ -80,24 +86,15 @@ const MedicalRecords = () => {
       payload.append('medicalRecord', form.file);
       const { data } = await api.post('/records', payload, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 120000,
       });
-      const record = data?.record;
-      if (record?.record_id) {
-        setRecords((prev) => [
-          {
-            id: record.record_id,
-            title: record.record_name,
-            fileName: extractFileName(record.record_file),
-            createdAt: record.created_at
-              ? new Date(record.created_at).toISOString().slice(0, 10)
-              : new Date().toISOString().slice(0, 10),
-          },
-          ...prev,
-        ]);
+      if (!data?.record?.record_id) {
+        throw new Error(data?.message || 'Failed to upload record.');
       }
+      await fetchRecords();
       handleCloseModal();
     } catch (err) {
-      setError(err?.response?.data?.message || 'Failed to upload record.');
+      setError(getUploadErrorMessage(err, 'Failed to upload record.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -112,16 +109,7 @@ const MedicalRecords = () => {
       if (!data?.success) {
         throw new Error(data?.message || 'Failed to update record.');
       }
-      const updated = data?.record;
-      if (updated?.record_id) {
-        setRecords((prev) =>
-          prev.map((r) =>
-            r.id === updated.record_id
-              ? { ...r, title: updated.record_name }
-              : r
-          )
-        );
-      }
+      await fetchRecords();
       handleCloseModal();
     } catch (err) {
       setError(err?.response?.data?.message || 'Failed to update record.');
@@ -143,7 +131,7 @@ const MedicalRecords = () => {
       setError('');
       setDeletingId(recordId);
       await api.delete(`/records/${recordId}`);
-      setRecords((prev) => prev.filter((r) => r.id !== recordId));
+      await fetchRecords();
       if (selectedRecord.id === recordId) {
         setSelectedRecord({ id: null, title: '' });
       }

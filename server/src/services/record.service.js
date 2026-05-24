@@ -33,12 +33,14 @@ const resolveStoredRecordPath = (value = "") => {
 
 
 export const handleFileUpload = async (userId, file, title) => {
+    const cleanTitle = String(title || "").trim();
+
     if (!userId) {
         const error = new Error("Invalid user.");
         error.status = 400;
         throw error;
     }
-    if (!title || !String(title).trim()) {
+    if (!cleanTitle) {
         const error = new Error("Record title is required.");
         error.status = 400;
         throw error;
@@ -61,7 +63,7 @@ export const handleFileUpload = async (userId, file, title) => {
               VALUES ($1, $2, $3)
               RETURNING id, user_id, name, url, created_at, updated_at
             `,
-            [userId, title, recordUrl]
+            [userId, cleanTitle, recordUrl]
         );
         if (!rows.length) {
             const error = new Error("Failed to save record metadata.");
@@ -72,12 +74,21 @@ export const handleFileUpload = async (userId, file, title) => {
         return {
             record_id: record.id,
             record_title: record.name,
+            record_name: record.name,
             record_file: record.url,
             uploaded_at: record.created_at,
+            created_at: record.created_at,
         };
     } catch (error) {
+        if (!isAWS && file?.path && fs.existsSync(file.path)) {
+            try {
+                fs.unlinkSync(file.path);
+            } catch {
+            }
+        }
+
         if (error?.code === "23505") {
-            const err = new Error(`A record with the title "${title}" already exists. Please use a unique name.`);
+            const err = new Error(`A record with the title "${cleanTitle}" already exists. Please use a unique name.`);
             err.status = 409;
             throw err;
         }

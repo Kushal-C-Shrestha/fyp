@@ -19,6 +19,9 @@ const upload = createUpload({
 });
 
 const uploadSingle = (req, res, next) => {
+    req.setTimeout(120000);
+    res.setTimeout(120000);
+
     upload.single("medicalRecord")(req, res, (err) => {
         if (!err) return next();
         if (err instanceof multer.MulterError) {

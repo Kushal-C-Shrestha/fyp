@@ -83,7 +83,7 @@ const AddRecordModal = ({
               className="w-full rounded-lg bg-slate-50 px-3 py-2 text-sm ring-1 ring-inset ring-slate-200 file:mr-3 file:rounded-md file:border-0 file:bg-slate-200 file:px-2.5 file:py-1.5 file:text-xs file:font-semibold"
               required
             />
-            <p className="text-xs text-slate-400">PDF files only, max 5 MB.</p>
+            <p className="text-xs text-slate-400">PDF files only, max 10 MB.</p>
           </>
         )}
       </form>

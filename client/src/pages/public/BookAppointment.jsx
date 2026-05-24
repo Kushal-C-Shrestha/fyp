@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useCallback, useRef, useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   Building2,
@@ -56,7 +56,19 @@ const BookAppointment = () => {
   const [pendingBookingData, setPendingBookingData] = useState(null);
   const recordFileInputRef = useRef(null);
 
+  const fetchUserRecords = useCallback(async () => {
+    if (!user) return [];
 
+    try {
+      const { data } = await api.get('/records');
+      const records = Array.isArray(data?.records) ? data.records : [];
+      setUserRecords(records);
+      return records;
+    } catch (err) {
+      console.error('Failed to fetch records:', err);
+      return [];
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchDoctorData = async () => {
@@ -102,17 +114,8 @@ const BookAppointment = () => {
   }, [id]);
 
   useEffect(() => {
-    const fetchRecords = async () => {
-      if (!user) return;
-      try {
-        const { data } = await api.get('/records');
-        setUserRecords(data.records || []);
-      } catch (err) {
-        console.error('Failed to fetch records:', err);
-      }
-    };
-    fetchRecords();
-  }, [user]);
+    fetchUserRecords();
+  }, [fetchUserRecords]);
   console.log(doctor);
 
 
@@ -180,6 +183,7 @@ const BookAppointment = () => {
 
       const { data } = await api.post('/records', payload, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 120000,
       });
 
       const record = data?.record;
@@ -187,9 +191,7 @@ const BookAppointment = () => {
         throw new Error('Failed to upload medical record.');
       }
 
-      console.log('Uploaded record:', record);
-
-      setUserRecords((prev) => [record, ...prev]);
+      await fetchUserRecords();
       setSelectedRecordIds((prev) => (
         prev.includes(record.record_id) ? prev : [...prev, record.record_id]
       ));
