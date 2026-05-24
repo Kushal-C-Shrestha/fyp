@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import { getVerificationDocumentViewPath, openProtectedFile } from "../../utils/fileAccess";
-import { DUMMY_DOCTOR_REQUEST_ID, dummyDoctorRequest } from "../../utils/adminRequestDummies";
 import { ChevronLeft, Check, X, FileText, Calendar, User, Phone, Mail, MapPin, Briefcase } from "lucide-react";
 
 const formatAppointmentDate = (value) => {
@@ -61,10 +60,6 @@ const AdminDoctorRequestDetail = () => {
       try {
         setLoading(true);
         setError("");
-        if (String(requestId) === DUMMY_DOCTOR_REQUEST_ID) {
-          setRequest(dummyDoctorRequest);
-          return;
-        }
         const { data } = await api.get(`/admin/doctor-requests/${requestId}`);
         setRequest(data?.request);
       } catch (err) {
@@ -81,10 +76,6 @@ const AdminDoctorRequestDetail = () => {
     try {
       setVerifying(true);
       setError("");
-      if (String(requestId) === DUMMY_DOCTOR_REQUEST_ID) {
-        setRequest(prev => ({ ...prev, request_status: status }));
-        return;
-      }
       await api.put(`/doctor-requests/${requestId}/verify`, { status });
       setRequest(prev => ({ ...prev, request_status: status }));
     } catch (err) {

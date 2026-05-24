@@ -5,7 +5,6 @@ import { Eye } from "lucide-react";
 import ActionIconButton from "../../components/ui/ActionIconButton";
 import DataTable from "../../components/ui/DataTable";
 import SearchFilterBar from "../../components/ui/SearchFilterBar";
-import { withPendingHospitalDummy } from "../../utils/adminRequestDummies";
 
 const formatAppointmentDate = (value) => {
   if (!value) return '-';
@@ -40,7 +39,7 @@ const AdminHospitalRequests = () => {
         setLoading(true);
         setError("");
         const { data } = await api.get("/admin/hospital-requests");
-        setRequests(withPendingHospitalDummy(Array.isArray(data?.requests) ? data.requests : []));
+        setRequests(Array.isArray(data?.requests) ? data.requests : []);
       } catch (err) {
         setRequests([]);
         setError(err?.response?.data?.message || "Failed to load hospital requests.");

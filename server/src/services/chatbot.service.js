@@ -128,7 +128,7 @@ export const handleMessage = async (sessionId, userId, message) => {
             chatHistory = await memory.chatHistory.getMessages();
         }
 
-        // 3. Build user/context info for the agent
+        // Build user/context info for the agent
         const now = new Date();
         let context = "User is not logged in.";
         if (userId) {
@@ -239,12 +239,11 @@ export const handleMessage = async (sessionId, userId, message) => {
 
 
 
-        // 5. Persist to in-memory LangChain history
+        // Persist to in-memory LangChain history
         const activeMemory = getMemory(sessionId);
         await activeMemory.chatHistory.addMessage(new HumanMessage(message));
         await activeMemory.chatHistory.addMessage(new AIMessage(assistantText));
 
-        // 6. Persist assistant response to database
         if (assistantMsgId) {
             await pool.query(
                 `UPDATE assistant_messages SET message = $1, metadata = $2, created_at = NOW() WHERE id = $3`,

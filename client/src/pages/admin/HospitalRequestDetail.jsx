@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../api/axios";
-import Modal from "../../components/ui/Modal";
 import { getVerificationDocumentViewPath, openProtectedFile } from "../../utils/fileAccess";
-import { DUMMY_HOSPITAL_REQUEST_ID, dummyHospitalRequest } from "../../utils/adminRequestDummies";
 import { ChevronLeft, Check, X, FileText, Calendar, User, Phone, Mail, MapPin, Building2, Globe, Clock, ShieldCheck, Ambulance } from "lucide-react";
 
 const formatAppointmentDate = (value) => {
@@ -63,18 +61,12 @@ const AdminHospitalRequestDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [verifying, setVerifying] = useState(false);
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [rejectionReason, setRejectionReason] = useState("");
 
   useEffect(() => {
     const loadRequest = async () => {
       try {
         setLoading(true);
         setError("");
-        if (String(requestId) === DUMMY_HOSPITAL_REQUEST_ID) {
-          setRequest(dummyHospitalRequest);
-          return;
-        }
         const { data } = await api.get(`/admin/hospital-requests/${requestId}`);
         setRequest(data?.request);
       } catch (err) {
@@ -91,19 +83,11 @@ const AdminHospitalRequestDetail = () => {
     try {
       setVerifying(true);
       setError("");
-      if (String(requestId) === DUMMY_HOSPITAL_REQUEST_ID) {
-        setRequest(prev => ({ ...prev, request_status: status }));
-        setShowRejectModal(false);
-        setRejectionReason("");
-        return;
-      }
       await api.put(`/hospital-requests/${requestId}/verify`, {
         verify: status,
         reason: String(reason || "").trim() || null,
       });
       setRequest(prev => ({ ...prev, request_status: status }));
-      setShowRejectModal(false);
-      setRejectionReason("");
     } catch (err) {
       setError(err?.response?.data?.message || `Failed to ${status} request.`);
     } finally {
@@ -190,16 +174,11 @@ const AdminHospitalRequestDetail = () => {
             {request?.request_status?.toLowerCase() === "pending" && (
               <>
               <button
-                onClick={() => {
-                  setRejectionReason("");
-                  setShowRejectModal(true);
-                }}
+                onClick={() => handleVerify("rejected")}
                 disabled={verifying}
-                className="inline-flex h-9 items-center gap-2 rounded-xl border border-rose-200 bg-white px-3.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex h-9 items-center gap-2 rounded-xl bg-rose-600 px-3.5 text-xs font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-600">
-                  <X className="h-3.5 w-3.5" />
-                </span>
+                <X className="h-3.5 w-3.5" />
                 Reject
               </button>
               <button
@@ -207,9 +186,7 @@ const AdminHospitalRequestDetail = () => {
                 disabled={verifying}
                 className="inline-flex h-9 items-center gap-2 rounded-xl bg-emerald-700 px-3.5 text-xs font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/15 text-white">
-                  <Check className="h-3.5 w-3.5" />
-                </span>
+                <Check className="h-3.5 w-3.5" />
                 Approve Hospital
               </button>
               </>
@@ -349,51 +326,6 @@ const AdminHospitalRequestDetail = () => {
           </div>
           </div>
         </div>
-        <Modal
-          isOpen={showRejectModal}
-          onClose={() => {
-            if (verifying) return;
-            setShowRejectModal(false);
-            setRejectionReason("");
-          }}
-          title="Reject Hospital Request"
-          subtitle="Add a short reason so the hospital admin understands what needs to change."
-          size="md"
-          footer={(
-            <>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowRejectModal(false);
-                  setRejectionReason("");
-                }}
-                disabled={verifying}
-                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => handleVerify("rejected", rejectionReason)}
-                disabled={verifying || !rejectionReason.trim()}
-                className="rounded-xl bg-rose-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {verifying ? "Rejecting..." : "Reject Request"}
-              </button>
-            </>
-          )}
-        >
-          <label className="space-y-2">
-            <span className="text-xs font-bold uppercase tracking-wide text-slate-500">Reason</span>
-            <textarea
-              value={rejectionReason}
-              onChange={(event) => setRejectionReason(event.target.value)}
-              rows={5}
-              className="w-full resize-y rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none transition focus:ring-2 focus:ring-sky-100"
-              placeholder="Example: Missing license document or unclear registration details."
-            />
-          </label>
-        </Modal>
     </>
   );
 };
