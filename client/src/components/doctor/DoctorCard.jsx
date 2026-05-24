@@ -20,25 +20,27 @@ const DoctorCard = ({
   const hospitalTimings = Array.isArray(doctor.hospitalTimings) ? doctor.hospitalTimings : [];
 
   const formattedRating = `${doctor.rating.toFixed(1)} (${doctor.reviewCount} reviews)`;
-  const renderHospitalTimings = () => {
+  const formatHospitalTiming = (item) => {
+    const startTime = formatTime(item.start_time);
+    const endTime = formatTime(item.end_time);
+    const timing = startTime && endTime ? ` (${startTime} - ${endTime})` : '';
+
+    return `${item.hospital_name || 'Hospital unavailable'}${timing}`;
+  };
+
+  const hospitalTimingText = () => {
     if (hospitalTimings.length === 0) {
       return doctor.hospitalName || 'Hospital unavailable';
     }
 
-    return hospitalTimings.map((item, index) => {
-      const startTime = formatTime(item.start_time);
-      const endTime = formatTime(item.end_time);
-
-      return (
-        <span key={`${item.hospital_id}-${index}`} className="block truncate">
-          <span className="font-medium text-slate-800">
-            {item.hospital_name}
-          </span>
-          {startTime && endTime ? ` (${startTime} - ${endTime})` : ''}
-        </span>
-      );
-    });
+    const [firstHospital] = hospitalTimings;
+    const extraCount = hospitalTimings.length - 1;
+    return `${formatHospitalTiming(firstHospital)}${extraCount > 0 ? ` +${extraCount} more` : ''}`;
   };
+  const hospitalText = hospitalTimingText();
+  const hospitalTitle = hospitalTimings.length > 0
+    ? hospitalTimings.map(formatHospitalTiming).join(', ')
+    : hospitalText;
 
   return (
     <div
@@ -80,11 +82,11 @@ const DoctorCard = ({
                   {doctor.specialization}
                 </p>
 
-                <div className="mt-2.5 flex items-start gap-1.5 text-sm text-slate-600">
-                  <Building2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" />
+                <div className="mt-2.5 flex min-w-0 items-center gap-1.5 text-sm text-slate-600">
+                  <Building2 className="h-3.5 w-3.5 shrink-0 text-slate-500" />
 
-                  <span className="min-w-0 flex-1 space-y-0.5">
-                    {renderHospitalTimings()}
+                  <span className="min-w-0 flex-1 truncate" title={hospitalTitle}>
+                    {hospitalText}
                   </span>
                 </div>
 
@@ -125,11 +127,11 @@ const DoctorCard = ({
                   {doctor.name}
                 </h3>
 
-                <div className="mt-2.5 flex items-start gap-1.5 text-sm text-slate-600">
-                  <Building2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" />
+                <div className="mt-2.5 flex min-w-0 items-center gap-1.5 text-sm text-slate-600">
+                  <Building2 className="h-3.5 w-3.5 shrink-0 text-slate-500" />
 
-                  <span className="min-w-0 flex-1 space-y-0.5">
-                    {renderHospitalTimings()}
+                  <span className="min-w-0 flex-1 truncate" title={hospitalTitle}>
+                    {hospitalText}
                   </span>
                 </div>
 
